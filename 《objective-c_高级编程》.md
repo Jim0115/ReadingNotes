@@ -70,3 +70,34 @@ Tips: 将任务分配到多个不同的串行队列中，同一队列中的任�
     dispatch_group_wait(group, timeout)
     
 `dispatch_group_wait`的第二个参数为等待时间，等待时间后判断`group`中队列是否执行完毕，执行完毕返回0，否则返回1。
+
+### dispatch_barrier_async
+    dispatch_async(queue, blk0)
+    dispatch_async(queue, blk1)
+    dispatch_async(queue, blk2)
+    dispatch_async(queue, blk3)
+    dispatch_async(queue, blk4)
+    dispatch_barrier_async(queue, blk5)
+    dispatch_async(queue, blk6)
+    dispatch_async(queue, blk7)
+    dispatch_async(queue, blk8)
+    dispatch_async(queue, blk9)
+    
+在一个并行队列中，使用`dispatch_barrier_async`追加的任务一定在队列中所有已有任务执行完毕后执行，一定在后追加的任务前执行。  
+使用`dispatch_barrier_async`追加到并行队列中的所有任务**串行执行**。  
+Example: 在数据库的读写中，需要串行执行写操作，同时并行执行读操作，且写操作不能与任何其他操作同时进行。即可使用`dispatch_async`追加读操作，使用`dispatch_barrier_async`追加写操作。 
+
+### dispatch_apply
+    dispatch_apply(iterations: Int, queue, block: (Int) -> Void)
+    
+同步的(sync)将`block`追加到`queue`中`iterations`次。`block.$0`代表block的序列。  
+ 但是`iterations`次追加是一次性追加到`queue`中的，如果`queue`是一个并行队列，则这些`block`将并行执行。当这些`block`执行完毕后恢复当前线程。
+
+    dispatch_apply(array.count, queue) { (index) in print(a[index]) }
+    
+这样可以在`queue`中处理`array`中所有元素。
+
+### dispatch_suspend & dispatch_resume
+挂起/恢复指定的队列。  
+对任何队列挂起后如果没有恢复将导致运行错误。  
+向挂起的队列中追加任务有效，将在队列恢复后执行。
