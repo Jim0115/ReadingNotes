@@ -125,3 +125,15 @@ Example: 在数据库的读写中，需要串行执行写操作，同时并行�
     dispatch_once(&pred) {
       // init
     }
+    
+    
+    
+## NSOperation & NSOperationQueue
+是对 `GCD`进行的面向对象的封装，`NSOperation`和`NSOperationQueue`分别对应`GCD`中的`任务`和`队列`。  
+只需要把要执行的任务通过`addExecutedBlock:`方法追加到`NSOperation`中，再将`NSOperation`通过`addOperation`方法加入到`NSOperationQueue`中即可。  
+使用`queue.addOperations([NSOperation], waitUntilFinished: Bool)`可以将多个`Operation`添加到同一个队列中，`$1`为`true`时，将阻塞当前线程直到队列中任务执行完毕。  
+不能将与队列中且尚未执行的任务相同的任务添加到队列中。  
+`operation1.addDependency(operation2)`可以在`Operation`之间添加依赖。即`Operation1`依赖于`Operation2`表示`Operation1`将在`Operation2`执行完毕后执行。**依赖之间有可能产生环导致环中所有任务不能执行。**Operation自身可以依赖于自身，形成单个Operation构成的环，同样会阻塞进程。  
+设置`operation.completionBlock`，`completionBlock`将在operation执行完毕后执行，但并不在operation所在的队列中。
+> The exact execution context for your completion block is not guaranteed but is typically a secondary thread. Therefore, you should not use this block to do any work that requires a very specific execution context.
+
