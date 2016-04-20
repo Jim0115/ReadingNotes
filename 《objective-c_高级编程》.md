@@ -101,3 +101,27 @@ Example: 在数据库的读写中，需要串行执行写操作，同时并行�
 挂起/恢复指定的队列。  
 对任何队列挂起后如果没有恢复将导致运行错误。  
 向挂起的队列中追加任务有效，将在队列恢复后执行。
+
+### dispatch semaphore(信号量)
+用于保护临界区内的代码不被并发地访问。  
+
+    let semaphore = dispatch_semaphore_create(1)
+    
+    let result = dispatch_semaphore_wait(semaphore, time)
+    
+    if result == 0 {
+      // critical section
+    } else {
+      // timeout
+    }
+    
+    dispatch_semaphore_signal(semaphore)
+    
+### dispatch once
+
+确保在应用程序中只执行一次指定处理。可用于在多线程中实现单例模式。
+
+    var pred = dispatch_once_t()
+    dispatch_once(&pred) {
+      // init
+    }
