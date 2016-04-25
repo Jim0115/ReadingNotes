@@ -1,12 +1,12 @@
 ## Apr 24 优酷土豆
 ### 字符串解码 输入"a2b3q2f4" 输出"aabbbqqffff"
 
-let c = "a2j5b3k6b3n4m6v7c1"
+    let c = "a2j5b3k6b3n4m6v7c1"
     
     func decode(code: String) -> String {
       var ans = ""
       
-      guard code.characters.count != 0 else { return "" }
+      guard !code.isEmpty else { return "" }
       guard code.characters.count % 2 == 0 else { return "illegal input" }
       
       var range = code.startIndex ... code.startIndex.advancedBy(1)
