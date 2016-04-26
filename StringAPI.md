@@ -116,6 +116,10 @@ Complexity: O(1) unless bridging from Objective-C requires an O(N) conversion.
 ### `static func defaultCStringEncoding() -> NSStringEncoding`
 [Foundation] Returns the C-string encoding assumed for any method accepting a C string as an argument.  
 返回默认的C语音字符串编码
+### `static func fromCString(cs: UnsafePointer<CChar>) -> String?`
+Creates a new String by copying the nul-terminated UTF-8 data referenced by a CString. 
+Returns nil if the CString is NULL or if it contains ill-formed UTF-8 code unit sequences.  
+将C语言字符串转换为String
 ### `static func localizedStringWithFormat(format: String, _ arguments: CVarArgType...) -> String`
 [Foundation] Returns a string created by using a given format string as a template into which the remaining argument values are substituted according to the user's default locale.
 `String.localizedStringWithFormat("%@ %ld %lu", "hello", 3, 20)  // hello 3 20`
@@ -129,3 +133,31 @@ Complexity: O(1) unless bridging from Objective-C requires an O(N) conversion.
 Append the elements of other to self.  
 将`other`字符串追加到字符串的末尾
 ### `mutating func appendContentsOf<S : SequenceType where S.Generator.Element == Character>(newElements: S)`
+泛形的追加方法，对任意元素为Character的SequenceType成立
+### `func cStringUsingEncoding(encoding: NSStringEncoding) -> [CChar]?`
+[Foundation] Returns a representation of the String as a C string using a given encoding.  
+`"hello".cStringUsingEncoding(NSUTF8StringEncoding) // [104, 101, 108, 108, 111, 0]`  
+`"hello\0".cStringUsingEncoding(NSUTF8StringEncoding) // [104, 101, 108, 108, 111, 0]`    
+对于末尾没有`\0`的字符串，在转换为C语言类型字符串时会自动添加`\0`，但对已有的字符串不会重复添加。  
+使用`String.fromCString([CChar])`可以转换回String
+### `func canBeConvertedToEncoding(encoding: NSStringEncoding) -> Bool`
+[Foundation] Returns a Boolean value that indicates whether the String can be converted to a given encoding without loss of information.  
+判断字符串是否能无损转换为指定的编码
+### `func capitalizedStringWithLocale(locale: NSLocale?) -> String`
+[Foundation] Returns a capitalized representation of the String using the specified locale.  
+根据输入的位置输出大小写转换后的String
+### `func caseInsensitiveCompare(aString: String) -> NSComparisonResult`
+[Foundation] Returns the result of invoking `compare:options:` with `NSCaseInsensitiveSearch` as the only option.  
+大小写不敏感的比较方法，返回枚举类型`NSComparisonResult`
+  
+     enum NSComparisonResult : Int {
+        case OrderedAscending
+        case OrderedSame
+        case OrderedDescending
+     }
+### `func commonPrefixWithString(aString: String, options: NSStringCompareOptions) -> String`
+[Foundation] Returns a string containing characters the String and a given string have in common, starting from the beginning of each up to the first characters that aren’t equivalent.  
+返回两个字符串从头开始相同的部分。若无相同部分则返回`""`
+### `func compare(aString: String, options mask: NSStringCompareOptions = default, range: Range<Index>? = default, locale: NSLocale? = default) -> NSComparisonResult`
+[Foundation] Compares the string using the specified options and returns the lexical ordering for the range.  
+字符串比较的万能方法
