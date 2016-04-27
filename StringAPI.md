@@ -161,3 +161,29 @@ Append the elements of other to self.
 ### `func compare(aString: String, options mask: NSStringCompareOptions = default, range: Range<Index>? = default, locale: NSLocale? = default) -> NSComparisonResult`
 [Foundation] Compares the string using the specified options and returns the lexical ordering for the range.  
 字符串比较的万能方法
+### `func completePathIntoString(outputName: UnsafeMutablePointer<String> = default, caseSensitive: Bool, matchesIntoArray: UnsafeMutablePointer<[String]> = default, filterTypes: [String]? = default) -> Int`
+[Foundation] Interprets the String as a path in the file system and attempts to perform filename completion, returning a numeric value that indicates whether a match was possible, and by reference the longest path that matches the String. Returns the actual number of matching paths.  
+补全路径 **意义不明**
+### `func componentsSeparatedByCharactersInSet(separator: NSCharacterSet) -> [String]`
+[Foundation] Returns an array containing substrings from the String that have been divided by characters in a given set.  
+使用一个字符集中所有字符去分割字符串，字符集通常使用`NSCharacterSet`中的static属性。
+### `func componentsSeparatedByString(separator: String) -> [String]`
+[Foundation] Returns an array containing substrings from the String that have been divided by a given separator.  
+使用参数字符串作为**分割标准**去分割原字符串，返回经过分割后的字符串数组。  
+`"aloha".componentsSeparatedByString("lo") // ["a", "ha"]`
+### `func containsString(other: String) -> Bool`
+[Foundation] Returns true iff other is non-empty and contained within self by case-sensitive, non-literal search.  
+Equivalent to self.rangeOfString(other) != nil  
+判断是非包含参数字符串。  
+`"believe".containsString("lie") // true`
+### `func dataUsingEncoding(encoding: NSStringEncoding, allowLossyConversion: Bool = default) -> NSData?`
+[Foundation] Returns an NSData object containing a representation of the String encoded using a given encoding.  
+使用指定的编码将字符串对象转换为NSdata，若字符串不符合编码要求将返回nil。  
+`"东北大学".dataUsingEncoding(NSUTF8StringEncoding)  // <e4b89ce5 8c97e5a4 a7e5ada6>`
+`"NEU".dataUsingEncoding(NSASCIIStringEncoding) // <4e4555>`  
+`"东北大学".dataUsingEncoding(NSASCIIStringEncoding) // nil`
+### `func enumerateLines(body: (line: String, inout stop: Bool) -> ())`
+[Foundation] Enumerates all the lines in a string.
+`line`为每一行的字符串，`stop`为控制条件，在closure中将`stop`设为true将终止遍历。使用`\r`, `\n`, `\r\n`均被视为一次换行。
+### `func enumerateLinguisticTagsInRange(range: Range<Index>, scheme tagScheme: String, options opts: NSLinguisticTaggerOptions, orthography: NSOrthography?, _ body: (String, Range<Index>, Range<Index>, inout Bool) -> ())`
+[Foundation] Performs linguistic analysis on the specified string by enumerating the specific range of the string, providing the Block with the located tags.
