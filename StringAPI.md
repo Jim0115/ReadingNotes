@@ -186,4 +186,45 @@ Equivalent to self.rangeOfString(other) != nil
 [Foundation] Enumerates all the lines in a string.
 `line`为每一行的字符串，`stop`为控制条件，在closure中将`stop`设为true将终止遍历。使用`\r`, `\n`, `\r\n`均被视为一次换行。
 ### `func enumerateLinguisticTagsInRange(range: Range<Index>, scheme tagScheme: String, options opts: NSLinguisticTaggerOptions, orthography: NSOrthography?, _ body: (String, Range<Index>, Range<Index>, inout Bool) -> ())`
-[Foundation] Performs linguistic analysis on the specified string by enumerating the specific range of the string, providing the Block with the located tags.
+[Foundation] Performs linguistic analysis on the specified string by enumerating the specific range of the string, providing the Block with the located tags.  
+**意义不明**
+### `func enumerateSubstringsInRange(range: Range<Index>, options opts: NSStringEnumerationOptions, _ body: (substring: String?, substringRange: Range<Index>, enclosingRange: Range<Index>, inout Bool) -> ())`
+[Foundation] Enumerates the substrings of the specified type in the specified range of the string.  
+根据`NSStringEnumerationOptions`中的条件在`range`中遍历字符串，在closure中处理。
+
+    struct NSStringEnumerationOptions : OptionSetType {
+        init(rawValue rawValue: UInt)
+        static var ByLines: NSStringEnumerationOptions { get }
+        static var ByParagraphs: NSStringEnumerationOptions { get }
+        static var ByComposedCharacterSequences: NSStringEnumerationOptions { get }
+        static var ByWords: NSStringEnumerationOptions { get }
+        static var BySentences: NSStringEnumerationOptions { get }
+        static var Reverse: NSStringEnumerationOptions { get }
+        static var SubstringNotRequired: NSStringEnumerationOptions { get }
+        static var Localized: NSStringEnumerationOptions { get }
+    }
+    
+### `func getBytes(inout buffer: [UInt8], maxLength maxBufferCount: Int, usedLength usedBufferCount: UnsafeMutablePointer<Int>, encoding: NSStringEncoding, options: NSStringEncodingConversionOptions, range: Range<Index>, remainingRange leftover: UnsafeMutablePointer<Range<Index>>) -> Bool`
+[Foundation] Writes the given range of characters into buffer in a given encoding, without any allocations. Does not NULL-terminate.
+
+buffer: A buffer into which to store the bytes from the receiver. The returned bytes are not NUL-terminated.
+
+maxBufferCount: The maximum number of bytes to write to buffer.
+
+usedBufferCount: The number of bytes used from buffer. Pass nil if you do not need this value.
+
+encoding: The encoding to use for the returned bytes.
+
+options: A mask to specify options to use for converting the receiver’s contents to encoding (if conversion
+
+is necessary).
+
+range: The range of characters in the receiver to get.
+
+leftover: The remaining range. Pass nil If you do not need this value.
+
+Returns: true iff some characters were converted.
+
+Note: Conversion stops when the buffer fills or when the conversion isn't possible due to the chosen encoding.
+
+Note: will get a maximum of min(buffer.count, maxLength) bytes.
