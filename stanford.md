@@ -40,3 +40,7 @@
                       duration:(NSTimeInterval)duration
                        options:(UIViewAnimationOptions)options
                     completion:(void (^)(BOOL finished))completion
+                    
+# Class 11 @April 29, 2016
+## 动态TableView使用Segue进行跳转时，获取用户点击的cell
+`NSIndexPath* indexPath = [self.tableView indexPathForCell:sender];`
