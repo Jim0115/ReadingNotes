@@ -121,3 +121,34 @@
       }
     }
 使用两个指针，指针1指向数组头部第一个0，指针2指向指针1后第一个不为0的元素。之后，在数组范围内指针2++，遇到不为0的元素就交换两个指针的元素，之后指针1++。
+## April 29, 2016 leetcode
+### 判断两个二叉树是否相同
+    func isSameTree(p: TreeNode?, _ q: TreeNode?) -> Bool {
+      if (p == nil && q == nil) { return true }
+      if p?.val != q?.val {
+        return false
+      } else {
+        return isSameTree(p?.left, q?.left) && isSameTree(p?.right, q?.right)
+      }
+    }
+    
+首先判断两个节点是否相同：此时同为空或值相同则相同，不同为空则不同，同不为空但值不同则不同。之后递归的对节点的左右子树进行对比，节点相同且左右子树都相同则两个树相同。
+
+### 判断一个字符串是否是另一字符串乱序重拍后的结果
+
+    func isAnagram(s: String, _ t: String) -> Bool {
+      if s.characters.count != t.characters.count { return false }
+      for c in s.characters {
+        if !t.characters.contains(c) { return false }
+      }
+      return true
+    }
+    // 错误答案
+只判断了一个字符串中的所有元素是否全部包含在另一字符串中。如"aab"和"abb"就会出现错误结果。
+
+    func isAnagram(s: String, _ t: String) -> Bool {
+      if s.characters.count != t.characters.count { return false }
+      return s.characters.sort() == t.characters.sort()
+    }
+首先判断两字符串长度，不等则返回false。之后对两字符串进行排序，判断是否相等。  
+本题假设字符串只包含26个字母，则可以对所有字符进行hash，计算出每个字符出现的次数后对比。
