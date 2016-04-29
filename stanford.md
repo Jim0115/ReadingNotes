@@ -44,3 +44,12 @@
 # Class 11 @April 29, 2016
 ## 动态TableView使用Segue进行跳转时，获取用户点击的cell
 `NSIndexPath* indexPath = [self.tableView indexPathForCell:sender];`
+## popover
+`UIPopoverController`不是`UIViewController`的子类  
+`UIStoryboardPopoverSegue`是`UIStoryboardSegue`的子类
+
+    - (void)prepareForSegue:(UIStoryboardSegue)segue sender:(id)sender {
+        if ([segue isKindOfClass:[UIStoryboardPopoverSegue class]]) {
+            UIPopoverController* popoverController = ((UIStoryboardPopoverSegue *)segue).popoverController;
+        }
+    }
