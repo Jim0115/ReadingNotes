@@ -152,3 +152,29 @@
     }
 首先判断两字符串长度，不等则返回false。之后对两字符串进行排序，判断是否相等。  
 本题假设字符串只包含26个字母，则可以对所有字符进行hash，计算出每个字符出现的次数后对比。
+
+### Excel 列字母转换为数字
+    A -> 1
+    B -> 2
+    C -> 3
+    ...
+    Z -> 26
+    AA -> 27
+    AB -> 28 
+    
+类似于进制转换，将26进制转换为10进制。
+
+    func titleToNumber(s: String) -> Int {
+      let str = s.uppercaseString
+      var ans = 0
+      var times: Double = 0
+      
+      for char in str.unicodeScalars.reverse() {
+        ans += (Int(char.value) - 64) * Int(pow(Double(26), times))
+        times += 1
+      }
+      
+      return ans
+    }
+
+将字符串转换为字符数组并倒序，遍历该字符数组，从最低位开始算起，每高一位代表26^n
