@@ -227,4 +227,48 @@ Returns: true iff some characters were converted.
 
 Note: Conversion stops when the buffer fills or when the conversion isn't possible due to the chosen encoding.
 
-Note: will get a maximum of min(buffer.count, maxLength) bytes.
+Note: will get a maximum of min(buffer.count, maxLength) bytes.  
+将字符串信息写入buffer中
+
+### `func getCString(inout buffer: [CChar], maxLength: Int, encoding: NSStringEncoding) -> Bool`
+[Foundation] Converts the String’s content to a given encoding and stores them in a buffer.  
+Note: will store a maximum of min(buffer.count, maxLength) bytes.  
+将字符串写入指定的buffer中  
+**在Swift的函数命名规则中，get开头的方法表示将通过修改某个传入的参数获取值**
+### `func hasPrefix(prefix: String) -> Bool`
+Returns true iff self begins with prefix.  
+判断一个字符串是否有指定前缀。 `"hello".hasPrefix("he") // true`
+
+### `func hasSuffix(prefix: String) -> Bool`
+Returns true iff self begins with suffix.  
+判断一个字符串是否有指定后缀。 `"hello".hasPrefix("lo") // true`
+### `mutating func insert(newElement: Character, atIndex i: Index)`
+Insert newElement at index i.  
+Invalidates all indices with respect to self.  
+在指定位置插入字符
+### `mutating func insertContentsOf<S : CollectionType where S.Generator.Element == Character>(newElements: S, at i: Index)`
+Insert newElements at index i.  
+Invalidates all indices with respect to self.  
+在指定位置插入元素为Character的集合类型
+
+    var name = "University"
+    name.insertContentsOf("Peking ".characters, at: name.startIndex)  // Peking University
+    
+### `func lengthOfBytesUsingEncoding(encoding: NSStringEncoding) -> Int`
+[Foundation] Returns the number of bytes required to store the String in a given encoding.  
+返回字符串在指定编码下的字节长度。对于无法转换成指定编码的字符串返回0；
+    
+    "东北大学".lengthOfBytesUsingEncoding(NSASCIIStringEncoding) // 0
+    "东北大学".lengthOfBytesUsingEncoding(NSUTF32StringEncoding) // 32
+    "东北大学".lengthOfBytesUsingEncoding(NSUTF8StringEncoding) // 8
+    "东北大学".lengthOfBytesUsingEncoding(NSUnicodeStringEncoding) // 8
+    
+### `func lineRangeForRange(aRange: Range<Index>) -> Range<Index>`
+[Foundation] Returns the range of characters representing the line or lines containing a given range.
+返回输入range中字符串所在行的range
+### `func linguisticTagsInRange(range: Range<Index>, scheme tagScheme: String, options opts: NSLinguisticTaggerOptions = default, orthography: NSOrthography? = default, tokenRanges: UnsafeMutablePointer<[Range<Index>]> = default) -> [String]`
+[Foundation] Returns an array of linguistic tags for the specified range and requested tags within the receiving string.
+
+### `func localizedCaseInsensitiveCompare(aString: String) -> NSComparisonResult`
+[Foundation] Compares the string and a given string using a case-insensitive, localized, comparison.
+
