@@ -21,7 +21,7 @@
 ### 修改view的其他属性时使用
 
     + (void)transitionWithView:(UIView *)view 
-                      duration:(NSTimeInterval)duration 
+                      duration:(NSTimeInterval)duration
                        options:(UIViewAnimationOptions)options
                     animations:(void (^)(void))animations 
                     completion:(void (^)(BOOL finished))completion
@@ -53,3 +53,15 @@
             UIPopoverController* popoverController = ((UIStoryboardPopoverSegue *)segue).popoverController;
         }
     }
+    
+# class 12 @ April 30, 2016
+## UIManagedDocument
+A container for your Core Data database.
+### open or create
+    NSFileManager* fileManager = [NSFileManager defaultManager];
+    NSURL* documentsDirectory = [[fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] firstObject];
+    
+    NSString* documentName = @"myDocument";
+    NSURL* url = [documentsDirectory URLByAppendingPathComponent:documentName];
+      
+    UIManagedDocument* document = [[UIManagedDocument alloc] initWithFileURL:url];
