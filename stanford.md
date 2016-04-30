@@ -65,3 +65,65 @@ A container for your Core Data database.
     NSURL* url = [documentsDirectory URLByAppendingPathComponent:documentName];
       
     UIManagedDocument* document = [[UIManagedDocument alloc] initWithFileURL:url];
+
+Check the file exists.  
+`BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:[url path]];`  
+if it does, open it:  
+`[document openWithCompletionHandler:^(BOOL success) { /* do sth */ }]; `  
+if it doesn't, create it:  
+`[document saveToURL:url forSaveOperation:UIDocumentSaveForCreating completionHandler:^(BOOL success) { /* do sth */ }];`  
+**两个方法都是异步的。**
+### check the state of document
+    if (self.document.documentState == UIDocumentStateNormal) {
+        // start using document
+    }
+    
+    enum {
+       UIDocumentStateNormal          = 0, 
+       UIDocumentStateClosed          = 1 << 0, // have not done the open or create
+       UIDocumentStateInConflict      = 1 << 1, // some other device change it via iCloud
+       UIDocumentStateSavingError     = 1 << 2, // success will be NO in completion handler
+
+       UIDocumentStateEditingDisabled = 1 << 3 // temporary situation, try again
+       UIDocumentStateProgressAvailable = 1 << 4
+    };
+    typedef NSInteger UIDocumentState;
+    
+### if the document is ready
+    if (self.document.documentState == UIDocumentStateNormal) {
+        NSManagedObjectContext* context = self.document.managedObjectContext;
+    }
+    
+### feature
+* autosave, but you can save it manually
+
+        [document saveToURL:document.fileURL
+           forSaveOperation:UIDocumentSaveForOverwriting
+          completionHandler:^(BOOL success) {  }];
+        // asynchronous
+* autoclose
+
+### KVO on managedObjectContext
+
+    - (void)viewDidAppear:(BOOL)animated {
+        [super viewDidAppear:animated];
+        [center addObserver:self
+                   selector:@selector(contextChanged:)
+                       name:NSManagedObjectContextDidSaveNotification
+                     object:document.managedObjectContext];
+    }
+    
+    - (void)viewWillDisappear:(BOOL)animated {
+        [center removeObserver:self
+                          name:NSManagedObjectContextDidSaveNotification
+                        object:document.managedObjectContext];
+        [super viewWillDisappear:animated];
+    }
+    
+### Merging changes
+`- (void)mergeChangesFromContextDidSaveNotification:(NSNotification *)notification;`
+
+## Core Data
+### Inserting objects into the database
+    NSManagedObjectContext* context = aDocument.managedObjectContext;
+    NSManagedObject* photo = [NSEntityDescription insertNewObjectForEntityForName:@"Photo" inManagedObjectContext:context];
