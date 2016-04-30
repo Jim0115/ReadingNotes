@@ -178,3 +178,73 @@
     }
 
 将字符串转换为字符数组并倒序，遍历该字符数组，从最低位开始算起，每高一位代表26^n
+
+## April 30, 2016 leetcode
+### 判断数组中是否存在重复数字。
+    func containsDuplicate(nums: [Int]) -> Bool {
+      return Set(nums).count != nums.count
+    }
+将数组元素放入集中，判断集中元素数量和数组中元素数量是否相同。
+
+    func containsDuplicate(nums: [Int]) -> Bool {
+      if nums.count == 0 { return false }
+      let sortedNums = nums.sort()
+      for i in 0..<sortedNums.count - 1 {
+        if sortedNums[i] == sortedNums[i + 1] {
+          return true
+        }
+      }
+      return false
+    }
+基于排序的解法，对数组进行排序，判断是否有相等的相邻元素。
+
+### 找到一个数组中存在的数量超过一半的元素
+    func majorityElement(nums: [Int]) -> Int {
+      let sortedNums = nums.sort()
+      return sortedNums[sortedNums.count / 2]
+    }
+排序数组，从中找出中位数即为数量超过一半的元素
+
+### 去除一个有序链表中重复的元素
+    func deleteDuplicates(head: ListNode?) -> ListNode? {
+      var curr = head
+      while curr != nil {
+        if curr?.val == curr?.next?.val {
+          curr?.next = curr?.next?.next
+          curr = curr?.next
+        } else {
+          curr = curr?.next
+        }
+      }
+      return head
+    }
+从链表头节点开始，判断当前节点值是否等于下一节点值：是，则当前节点的下一节点换为原下一节点的下一节点，继续判断；否，当前节点等于当前节点下一节点，直到当前节点为空。
+
+### 判断一个数是否为3的n次方
+    func isPowerOfThree(n: Int) -> Bool {
+      var num = 1
+      while num <= n {
+        if num == n { return true }
+        num *= 3
+      }
+      return false
+    }
+从num = 1开始进行计算，若num > n 返回false，否则判断num == n，若是，返回true，否则num *= 3。
+### ugly number
+如果一个数的质因数只有2, 3, 5，则这个数为ugly number。1被视为ugly number。
+
+    func isUgly(num: Int) -> Bool {
+      if num == 0 { return false }
+      var n = num
+      while (n % 2 == 0) {
+        n = n / 2
+      }
+      while (n % 3 == 0) {
+        n = n / 3
+      }
+      while (n % 5 == 0) {
+        n = n / 5
+      }
+      return n == 1
+    }
+判断一个数的因数中是否有2,3,5，若是，则将其除以2,3,5，判断最后输出的结果是否为1。
