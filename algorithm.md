@@ -248,3 +248,100 @@
       return n == 1
     }
 判断一个数的因数中是否有2,3,5，若是，则将其除以2,3,5，判断最后输出的结果是否为1。
+
+## May 1, 2016 leetcode
+### Happy Number
+将一个数所有位上的数字进行平方求和，若最终收敛为1，则该数字为一个Happy Number。否则将在几个数字间循环。
+
+    func isHappy(n: Int) -> Bool {
+      var ans = sum(n)
+      var nums = Set<Int>()
+      while true {
+        if ans == 1 {
+          return true
+        } else if !nums.contains(ans) {
+          nums.insert(ans)
+          ans = sum(ans)
+        } else {
+          return false
+        }
+        
+      }
+      return false
+    }
+    
+    func sum(n: Int) -> Int {
+      return n.description.characters.reduce(0) {
+        $0 + Int(pow(Double(String($1))!, 2.0))
+      }
+    }
+
+创建一个集合用于存储所有已经出现过的数字，每次操作后进行判断，若结果为1，则返回true。结果不为1，判断集合中是否存在该数字，若存在，则产生循环，返回false；不存在，则将数字存入集合中，继续进行操作。
+
+### Best Time to Buy and Sell Stock
+给定数组表示第i天的股票价格，若只允许一次买入和卖出，计算所获得的最大收益。（卖出必须在买入之后，所以不能单纯的用数组中最大值减去最小值）  
+使用动态规划方法求解。  
+
+    func maxProfit(prices: [Int]) -> Int {
+      if prices.isEmpty { return 0 }
+      var maxProfit = 0
+      var currentMin = prices[0]
+      for index in 0..<prices.count {
+        currentMin = min(currentMin, prices[index])
+        maxProfit = max(maxProfit, prices[index] - currentMin)
+      }
+      return maxProfit
+    }
+    
+两个变量分别记录当前的最低价格和最大收益。遍历数组，判断当天股价是否小于最低价，若是，则赋值给最低价。判断当前天数卖出是否能获得最大收入，若是，更新最大收入。最终的最大收入即为计算结果。
+
+### 合并两个有序链表
+    func mergeTwoLists(l1: ListNode?, _ l2: ListNode?) -> ListNode? {
+      if l1 == nil { return l2 }
+      if l2 == nil { return l1 }
+      
+      var n1 = l1
+      var n2 = l2
+      
+      let h = ListNode(0)
+      var head = h
+      
+      while (n1 != nil || n2 != nil) {
+        let compare = (n1?.val ?? Int.max) < (n2?.val ?? Int.max)
+        head.next = compare ? n1 : n2
+        
+        head = head.next!
+        if compare {
+          n1 = n1?.next
+        } else {
+          n2 = n2?.next
+        }
+      }
+      
+      return h.next
+    }
+**可选值进行比较时，nil被视为最小的值**  
+循环解法：某个队列为空，就返回另一个队列。对两个链表的头节点进行比较，较小的视为下一节点。循环直到两链表遍历完毕。
+
+    func mergeTwoLists(l1: ListNode?, _ l2: ListNode?) -> ListNode? {
+      if l1 == nil { return l2 }
+      if l2 == nil { return l1 }
+      
+      var ret: ListNode? = nil
+      
+      if (l1?.val < l2?.val)
+      {
+        ret = l1;
+        ret?.next = mergeTwoLists(l1?.next, l2);
+      }
+      else
+      {
+        ret = l2;
+        ret?.next = mergeTwoLists(l1, l2?.next);
+      }
+      
+      return ret;
+    }
+递归解法：某个队列为空，就返回另一个队列。比较两个头节点的值，较小的视为下一节点。对剩余的两个队列继续调用合并方法。
+
+### 
