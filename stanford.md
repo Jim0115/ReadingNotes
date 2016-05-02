@@ -127,3 +127,33 @@ if it doesn't, create it:
 ### Inserting objects into the database
     NSManagedObjectContext* context = aDocument.managedObjectContext;
     NSManagedObject* photo = [NSEntityDescription insertNewObjectForEntityForName:@"Photo" inManagedObjectContext:context];
+    
+### 生成NSManagedObject的子类
+#### 为什么实现文件中只有使用@Dynamic标记的属性？
+OC在运行时，如果调用了属性的setter或getter，而setter和getter并没有被实现，将会自动尝试使用`setValue:Forkey:`和`valueForKey:`如果失败，返回unknown selector错误，否则程序将正确执行。
+
+### Querying
+#### NSSortDescriotor
+      NSSortDescriptor* sortDescripter = [NSSortDescriptor sortDescriptorWithKey:@"title"
+                                                                       ascending:YES
+                                                                        selector:@selector(localizedStandardCompare:)];
+                                                                        
+#### `request.sortDescriptors`
+request中的sortDescriptors，包含多个sortDescriptor，对NSManagedObject进行多依据的排序。
+#### NSPerdicate
+specify exactlt **which objects** we want from the database.
+#### 返回内容
+返回nil，有错误发生，检查错误  
+返回空数组，没有找到满足查询条件的object    
+#### some others
+从数据库中获取到的object保存在数组中，但这些数组中的对象仅仅是占位符，只有当使用这些数组中的对象时，才真正获取到这些对象。
+#### Thread Safety
+NSManagedObjectContext不是线程安全的，但是由于Core Data通常速度很快，极少使用到多线程。  
+如果需要串行的执行操作，使用:
+
+    [context performBlock:^{
+        // do stuff with context in its safe queue (the queue it was created on)
+    }];
+    // or
+    [context performBlockAndWait:^{}];
+    
