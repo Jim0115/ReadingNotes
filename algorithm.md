@@ -344,4 +344,75 @@
     }
 递归解法：某个队列为空，就返回另一个队列。比较两个头节点的值，较小的视为下一节点。对剩余的两个队列继续调用合并方法。
 
-### 
+## May 2, 2016 leetcode
+### 成对交换链表中节点。
+    func swapPairs(head: ListNode?) -> ListNode? {
+      if head?.next == nil { return head }
+      var n1 = head
+      var n2 = n1?.next
+      let h = n2
+      
+      while n2 != nil {
+        n1?.next = n2?.next
+        n2?.next = n1
+        
+        let tmp = n1
+        n1 = n1?.next
+        n2 = n1?.next
+        if n2 != nil {
+          tmp?.next = n2
+        }
+      }
+      return h
+    }
+使用两个指针进行指向头节点和头节点的下一节点，调整next指针指向的节点，需要注意与后面一对节点之间的指向关系。
+### 对一个字符串中的元音字母倒序排列
+    func isVowel(c: Character) -> Bool {
+      return "aeiouAEIOU".characters.contains(c)
+    }
+    
+    func toCharArray(s: String) -> [Character] {
+      var v = [Character]()
+      for c in s.characters {
+        v.append(c)
+      }
+      return v
+    }
+    
+    func toString(chars: [Character]) -> String {
+      var s = ""
+      for c in chars {
+        s.append(c)
+      }
+      return s
+    }
+    
+    func reverseVowels(s: String) -> String {
+      if s.isEmpty { return s }
+      var chars = toCharArray(s)
+      
+      var start = 0
+      var end = chars.count - 1
+      
+      while true {
+        while !isVowel(chars[start]) && start < end {
+          start += 1
+        }
+        while !isVowel(chars[end]) && end > start {
+          end -= 1
+        }
+        
+        if start >= end {
+          return toString(chars)
+        }
+        
+        let tmp = chars[start]
+        chars[start] = chars[end]
+        chars[end] = tmp
+        
+        start += 1
+        end -= 1
+      }
+    }
+    
+由于string.characterView不能修改，于是将字符串转化成字符数组进行操作。从首尾两个方向遍历字符数组，找到元音字母后进行交换。有几种特殊输入情况：空字符串，不包含元音字母的字符串，大小写元音字母，需要注意。
