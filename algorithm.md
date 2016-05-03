@@ -416,3 +416,66 @@
     }
     
 由于string.characterView不能修改，于是将字符串转化成字符数组进行操作。从首尾两个方向遍历字符数组，找到元音字母后进行交换。有几种特殊输入情况：空字符串，不包含元音字母的字符串，大小写元音字母，需要注意。
+
+## May 3, 2016 leetcode
+### 判断平衡二叉树
+    func depth(root: TreeNode?) -> Int {
+      if root == nil {
+        return 0
+      } else {
+        return 1 + max(depth(root?.left), depth(root?.right))
+      }
+    }
+    
+    func isBalancedNode(node: TreeNode?) -> Bool {
+      return abs(depth(node?.left) - depth(node?.right)) <= 1
+    }
+    
+    func isBalanced(root: TreeNode?) -> Bool {
+      if root == nil { return true }
+      return isBalancedNode(root) && isBalanced(root?.left) && isBalanced(root?.right)
+    }
+    
+判断一个二叉树是平衡二叉树，从根节点起，计算每个节点左右子树深度之差，判断是否大于1，若是，返回false，否则判断左右子树是否为平衡二叉树。
+
+### 二叉树的一种广度遍历
+将二叉树：
+
+        3
+       / \
+      9  20
+        /  \
+       15   7
+转化为如下形式：
+
+    [
+      [15,7],
+      [9,20],
+      [3]
+    ]
+代码：
+
+    func levelOrderBottom(root: TreeNode?) -> [[Int]] {
+      if root == nil { return [] }
+      
+      var ans = [[Int]]()
+      
+      var children = [TreeNode?](arrayLiteral: root)
+      var noNil: [TreeNode] {
+        return children.flatMap { $0 }
+      }
+      
+      while noNil.count > 0 {
+        var tmp = [Int]()
+        var tmpNode = [TreeNode?]()
+        for v in noNil {
+          tmp.append(v.val)
+          tmpNode.append(v.left)
+          tmpNode.append(v.right)
+        }
+        children = tmpNode
+        ans.append(tmp)
+      }
+      return ans.reverse()
+    }
+本质上是二叉树的广度遍历，将每层结果保存在一个数组中，整个树构成一个二维数组。
