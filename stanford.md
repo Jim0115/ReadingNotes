@@ -157,3 +157,40 @@ NSManagedObjectContext不是线程安全的，但是由于Core Data通常速度�
     // or
     [context performBlockAndWait:^{}];
     
+# Class 13 @ May 3, 2016
+## Core Date and UITableView
+### NSFetchedResultsController
+hooks an `NSFetchRequset` up to a `UITableViewController`  
+Usually you'll have a `NSFetchResultsController` @property in your `UITableViewController`.  
+It will be hooked up to an `NSFetchRequest` that returns the data you want to show in your table.  
+Then use it to answer all your `UITableViewDataSource` protocol's questions.
+
+    - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+      return self.resultController.sections.count;
+    }
+    
+    - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+      return [self.resultController.sections objectAtIndex:section].numberOfObjects;
+    }
+    
+**Very important method**   
+`- (NSManagedObject *)objectAtIndexPath:(NSIndexPath *)indexPath;`
+
+    - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+      RecordCell *cell = [tableView dequeueReusableCellWithIdentifier:@"recordCell"
+                                                         forIndexPath:indexPath];
+      // example
+      Photo* photo = (Photo *)[self.fetchedResultsController objectAtIndexPath:indexPath];
+      
+      // configure the cell
+           
+      return cell;
+    }
+    
+#### How to create?
+    NSFetchRequest* request = [NSFetchRequest fetchRequestWithEntityName:@"Record"];
+    request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:false selector:@selector(compare:)]];
+    //    request.predicate = [NSPredicate predicateWithFormat:@"format"];
+    _resultController = [[NSFetchedResultsController alloc] initWithFetchRequest:request managedObjectContext:self.context sectionNameKeyPath:@"date" cacheName:@"recordCache"];
+
+cacheName为nil时不会缓存
