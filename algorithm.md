@@ -479,3 +479,83 @@
       return ans.reverse()
     }
 本质上是二叉树的广度遍历，将每层结果保存在一个数组中，整个树构成一个二维数组。
+
+## May 4, 2016 leetcode
+### Plus One
+input: [9, 9, 9]   
+output: [1, 0, 0, 0]
+
+    func plusOne(digits: [Int]) -> [Int] {
+      if digits.count == 0 { return [] }
+      var ans = digits
+      var index = ans.endIndex - 1
+      if index == 0 && ans[index] == 9 {
+        ans[index] = 0
+        ans.insert(1, atIndex: 0)
+        return ans
+      }
+      while addOne(&ans[index]) {
+        index -= 1
+        if index == 0 && ans[index] == 9 {
+          ans[index] = 0
+          ans.insert(1, atIndex: 0)
+          return ans
+        }
+      }
+      return ans
+    }
+    
+    func addOne(inout num: Int) -> Bool {
+      if num != 9 {
+        num += 1
+        return false
+      } else {
+        num = 0
+        return true
+      }
+    }
+    
+使用一个辅助函数addOne，判断数字是否为9，若是，置0，返回true（进位），否则直接将数字+1，返回false（不进位）。  
+从末位开始对数字+1，如果进位，则对其前一位进行+1操作。直到某一位不为9时，直接将其+1，循环结束。如果到达数组首位，则将数组前插入一个1而其他位均为0。
+
+### 移除数组中所有给定的值，返回完成后数组长度
+
+    func removeElement(inout nums: [Int], _ val: Int) -> Int {
+      nums = nums.flatMap { return $0 == val ? nil : $0 }
+      return nums.count
+    }
+在flatMap的过程中另开了与nums大小相同的内存空间。
+
+### 判断一个二叉树是否关于中轴对称
+    func isSymmetric(root: TreeNode?) -> Bool {
+      if root == nil { return true }
+      return isMirrored(root?.left, right: root?.right)
+    }
+    
+    func isMirrored(left: TreeNode?, right: TreeNode?) -> Bool {
+      if left == nil && right == nil {
+        return true
+      } else if left?.val != right?.val {
+        return false
+      }
+      return isMirrored(left?.right, right: right?.left) && isMirrored(left?.left, right: right?.right)
+    }
+    
+使用辅助函数，判断两棵树是否是对称的。如果两个根节点都为空，则返回true；如果两个根节点值不同，返回false。不满足这两条，判断左子树的左子树和右子树的右子树以及左子树的右子树和右子树的左子树是否都满足对称。
+
+### 对一个有序数组进行去重
+    func removeDuplicates(inout nums: [Int]) -> Int {
+      if nums.isEmpty { return 0 }
+      var i = 0
+      for j in 1..<nums.count {
+        if nums[i] != nums[j] {
+          i += 1
+          nums[i] = nums[j]
+        }
+      }
+      return i + 1
+    }
+使用两个索引，i指向数组头部，j从数组的第二个开始。让j走到数组尾部，如果j处的值和i处的值不同，则将i++，将j处的值赋值到i处，继续步骤直到j到达数组尾部。  
+此时所有的不重复的数字都集中在数组的前 i + 1 个位置上，所以数组长度为 i + 1。
+
+### 
