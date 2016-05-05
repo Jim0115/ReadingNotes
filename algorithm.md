@@ -558,4 +558,35 @@ output: [1, 0, 0, 0]
 使用两个索引，i指向数组头部，j从数组的第二个开始。让j走到数组尾部，如果j处的值和i处的值不同，则将i++，将j处的值赋值到i处，继续步骤直到j到达数组尾部。  
 此时所有的不重复的数字都集中在数组的前 i + 1 个位置上，所以数组长度为 i + 1。
 
-### 
+## May 5, 2016 leetcode
+### 杨辉三角
+For example, given numRows = 5,
+Return
+
+    [
+         [1],
+        [1,1],
+       [1,2,1],
+      [1,3,3,1],
+     [1,4,6,4,1]
+    ]
+    
+代码：
+
+    func generate(numRows: Int) -> [[Int]] {
+      if numRows == 0 { return [] }
+      var ans = [[1]]
+      for _ in 1..<numRows {
+        ans.append(nextRow(ans.last!))
+      }
+      return ans
+    }
+    
+    func nextRow(row: [Int]) -> [Int] {
+      var ans = Array<Int>(count: row.count + 1, repeatedValue: 1)
+      for i in 0..<ans.count where i != 0 && i != ans.count - 1 {
+        ans[i] = row[i - 1] + row[i]
+      }
+      return ans
+    }
+特殊情况0，返回空数组。初始化返回数组为[[1]]，使用辅助函数`nextRow(row: [Int]) -> [Int]`，给出当前输入行的下一行。循环n - 1次，每次对nextRow输入当前数组中最后一个元素，将返回结果追加到当前数组中。返回当前数组。
