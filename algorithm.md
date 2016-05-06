@@ -675,3 +675,48 @@ return:
       return min == x
     }
 每次取x的最低位作为 min 的最高位，直到x < 0，此时判断x == min
+
+### 翻转链表
+    func reverseList(head: ListNode?) -> ListNode? {
+      if head?.next == nil { return head }
+      var p1 = head
+      var p2 = head?.next
+      p1?.next = nil
+      while p2 != nil {
+        let tmp = p2?.next
+        p2?.next = p1
+        p1 = p2
+        p2 = tmp
+      }
+      return p1
+    }
+使用两个指针进行操作，注意`head?.next = nil`。
+
+### 判断链表是否是回文的
+    func isPalindrome(head: ListNode?) -> Bool {
+      var fast = head
+      var slow = head
+      
+      while fast?.next?.next != nil {
+        fast = fast?.next?.next
+        slow = slow?.next
+      }
+      
+      var h = head
+      var reverse = reverseList(slow)
+      
+      while reverse?.next != nil {
+        if reverse?.val != h?.val {
+          print(reverse?.val)
+          print(h?.val)
+          return false
+        }
+        reverse = reverse?.next
+        h = h?.next
+      }
+      
+      return true
+    }
+首先找到链表的中点，方法是使用两个指针每次分别前进1和2，当快的指针到达链表末尾时，慢的指针所指位置即为链表中部。之后使用上一题中的方法翻转链表的后半部分，判断两链表是否相同。
+
+### 
