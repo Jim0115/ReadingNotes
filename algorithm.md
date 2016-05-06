@@ -590,3 +590,88 @@ Return
       return ans
     }
 特殊情况0，返回空数组。初始化返回数组为[[1]]，使用辅助函数`nextRow(row: [Int]) -> [Int]`，给出当前输入行的下一行。循环n - 1次，每次对nextRow输入当前数组中最后一个元素，将返回结果追加到当前数组中。返回当前数组。
+
+## May 6, 2016 leetcode
+### 判断一个数的阶乘结果末尾有多少个0
+    func trailingZeroes(n: Int) -> Int {
+      if n == 0 { return n }
+      var count = 0
+      var i = 5
+      while true {
+        if i <= n {
+          count += n / i
+          i *= 5
+        } else {
+          return count
+        }
+      }
+    }
+使用一般方法很难求解，直接算出阶乘结果基本没有可操作性。此时应该考虑末尾0的产生方式。由于阶乘中2的倍数明显多于5的倍数，所以只需计算出阶乘中有多少个5或5的倍数即可。由于25中含有5 * 5，125中含有5 * 5 * 5，所以计算方法是先算出n中含有多少个5，再算出n中含有多少个5 * 5，重复此步骤直到n <= 5^i，循环结束，将之前计算出的个数求和即可。
+
+### 二叉树的广度遍历
+        3
+       / \
+      9  20
+        /  \
+       15   7
+return:
+
+    [
+      [3],
+      [9,20],
+      [15,7]
+    ]
+在遍历每一层时，将当前层的子节点加入到临时数组中，循环直到临时数组为空。
+
+    func levelOrder(root: TreeNode?) -> [[Int]] {
+      if root == nil { return [] }
+      var ans = [[Int]]()
+      var children = [root]
+      
+      while !children.isEmpty {
+        var tmpAns = [Int]()
+        var tmpChildren = [TreeNode?]()
+        for n in children {
+          tmpAns.append(n!.val)
+          tmpChildren.append(n?.left)
+          tmpChildren.append(n?.right)
+        }
+        ans.append(tmpAns)
+        children = tmpChildren.filter { $0 != nil }
+      }
+      return ans
+    }
+    
+### 求杨辉三角第n行元素
+
+    func nextRow(row: [Int]) -> [Int] {
+      var ans = Array<Int>(count: row.count + 1, repeatedValue: 1)
+      for i in 0..<ans.count where i != 0 && i != ans.count - 1 {
+        ans[i] = row[i - 1] + row[i]
+      }
+      return ans
+    }
+    
+    func getRow(rowIndex: Int) -> [Int] {
+      var ans = [1]
+      if rowIndex == 0 { return ans }
+      for _ in 1...rowIndex {
+        ans = nextRow(ans)
+      }
+      return ans
+    }
+类似于求杨辉三角，使用相同的辅助函数nextRow，循环获得第n行即可。对于输入值0要进行区分。
+
+### 判断一个数是否为回文数 340595043
+
+    func isPalindrome(x: Int) -> Bool {
+      var max = x
+      var min = 0
+      while max > 0 {
+        min *= 10
+        min += max % 10
+        max /= 10
+      }
+      return min == x
+    }
+每次取x的最低位作为 min 的最高位，直到x < 0，此时判断x == min
