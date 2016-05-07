@@ -719,4 +719,38 @@ return:
     }
 首先找到链表的中点，方法是使用两个指针每次分别前进1和2，当快的指针到达链表末尾时，慢的指针所指位置即为链表中部。之后使用上一题中的方法翻转链表的后半部分，判断两链表是否相同。
 
-### 
+## May 7, 2016 leetcode
+### 判断二叉树是否存在一条路径使得路径上元素和等于给定值
+    func hasPathSum(root: TreeNode?, _ sum: Int) -> Bool {
+      if root == nil { return false }
+      if root?.left == nil && root?.right == nil && root!.val == sum { return true }
+      
+      return hasPathSum(root?.left, sum - root!.val) || hasPathSum(root?.right, sum - root!.val)
+    }
+    
+如果当前节点为空，返回false  
+如果当前节点为叶子节点且值等于指定值，返回true  
+当前节点不是叶子节点，分别左右子树的和是否等于当前sum值减去当前节点值
+
+### 二叉树的最小深度
+    func minDepth(root: TreeNode?) -> Int {
+      if root == nil { return 0 }
+      if root?.left == nil && root?.right == nil { return 1 }
+      let minLeft = minDepth(root?.left)
+      let minRight = minDepth(root?.right)
+      if minLeft == 0 {
+        return 1 + minRight
+      } else if minRight == 0 {
+        return 1 + minLeft
+      } else {
+        return 1 + min(minLeft, minRight)
+      }
+    }
+对于一个节点分以下四种情况：
+
+* 左右子树均不为空 minDepth = 1 + min(left,right)
+* 一个子树为空 mingDepth = 1 + 不为空的子树
+* 叶子节点： 1
+* 空节点： 0
+
+在第二种情况中，需要注意与第一种情况进行区分
