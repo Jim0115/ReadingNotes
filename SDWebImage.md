@@ -68,14 +68,12 @@ This library provides a category for UIImageView with support for remote images 
         SDWebImageRefreshCached = 1 << 4,
     
         /**
-         * In iOS 4+, continue the download of the image if the app goes to background. This is achieved by asking the system for
-         * extra time in background to let the request finish. If the background task expires the operation will be cancelled.
+         * 向系统获取更长的后台时间用于获取图片
          */
         SDWebImageContinueInBackground = 1 << 5,
     
         /**
-         * Handles cookies stored in NSHTTPCookieStore by setting
-         * NSMutableURLRequest.HTTPShouldHandleCookies = YES;
+         * 处理储存在NSHTTPCookieStore中的cookies
          */
         SDWebImageHandleCookies = 1 << 6,
     
@@ -92,8 +90,8 @@ This library provides a category for UIImageView with support for remote images 
         SDWebImageHighPriority = 1 << 8,
         
         /**
-         * By default, placeholder images are loaded while the image is loading. This flag will delay the loading
-         * of the placeholder image until after the image has finished loading.
+         * 默认情况下，placeholder优先于image加载
+         * 此选项延迟加载placeholder到image加载完毕
          */
         SDWebImageDelayPlaceholder = 1 << 9,
     
@@ -176,4 +174,11 @@ This library provides a category for UIImageView with support for remote images 
 
 1. 取消当前加载中的image
 2. 将URL绑定到当前对象上
-3. 
+3. 判断是否启用延迟加载placeholder选项，若否，主线程加载placeholder
+4. 检查showActivityIndicatorView，若是，显示indicatorView
+5. 调用`SDWebImageManager`中的`downloadImageWithURL`方法下载图片
+6. 移除indicatorView
+7. 切换到主线程，使用`if (!wself) return`判断下载完成后引用是否有效，否则函数退出
+8. 判断`SDWebImageAvoidAutoSetImage`是否启用，若是，调用completedBlock
+9. 判断图片是否存在，若是，设置imageView的图片为image。否则判断`SDWebImageDelayPlaceholder`是否启用，若是，设置imageView的图片为placeholder
+10. 如果completedBlock存在，调用completedBlock
