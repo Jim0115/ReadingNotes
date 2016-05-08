@@ -272,3 +272,60 @@ Invalidates all indices with respect to self.
 ### `func localizedCaseInsensitiveCompare(aString: String) -> NSComparisonResult`
 [Foundation] Compares the string and a given string using a case-insensitive, localized, comparison.
 
+### `func propertyList() -> AnyObject`
+[Foundation] Parses the String as a text representation of a property list, returning an NSString, NSData, NSArray, or NSDictionary object, according to the topmost element.
+### `mutating func removeAll(keepCapacity keepCapacity: Bool = default)`
+Remove all characters.
+
+Invalidates all indices with respect to self.
+
+keepCapacity: If true, prevents the release of allocated storage, which can be a useful optimization when self is going to be grown again.  
+清空字符串。
+
+### `mutating func removeAtIndex(i: Index) -> Character`
+Remove and return the element at index i.  
+Invalidates all indices with respect to self.  
+移除指定index位置的字符并返回。
+
+### `mutating func removeRange(subRange: Range<Index>)`
+Remove the indicated subRange of characters.  
+Invalidates all indices with respect to self.  
+移除指定Range内的字符串
+
+### `mutating func replaceRange(subRange: Range<Index>, with newElements: String)`
+Replace the given subRange of elements with newElements.  
+Invalidates all indices with respect to self.  
+将指定range内的字符串替换为新字符串
+
+### `mutating func reserveCapacity(n: Int)`
+pre-allocate storage for the given capacity  
+为字符串预先分配内存空间
+
+### `func stringByAddingPercentEncodingWithAllowedCharacters(allowedCharacters: NSCharacterSet) -> String?`
+[Foundation] Returns a new string made from the String by replacing all characters not in the specified set with percent encoded characters.  
+根据允许的字符集将string中不符合的字符进行URL编码
+
+### `func stringByAppendingFormat(format: String, _ arguments: CVarArgType...) -> String`
+[Foundation] Returns a string made by appending to the String a string constructed from a given format string and the following arguments.  
+类似OC中方法，在Swift中较少使用，有多种替代方法。
+
+### `func stringByAppendingString(aString: String) -> String`
+[Foundation] Returns a new string made by appending a given string to the String.  
+等价于 `self + aString`
+
+### `func stringByApplyingTransform(transform: String, reverse: Bool) -> String?`
+    let NSStringTransformLatinToKatakana: String
+    let NSStringTransformLatinToHiragana: String
+    let NSStringTransformLatinToHangul: String
+    let NSStringTransformLatinToArabic: String
+    let NSStringTransformLatinToHebrew: String
+    let NSStringTransformLatinToThai: String
+    let NSStringTransformLatinToCyrillic: String
+    let NSStringTransformToLatin: String
+    let NSStringTransformMandarinToLatin: String
+    let NSStringTransformHiraganaToKatakana: String
+    let NSStringTransformFullwidthToHalfwidth: String
+    let NSStringTransformToXMLHex: String
+    let NSStringTransformToUnicodeName: String
+    let NSStringTransformStripCombiningMarks: String
+    let NSStringTransformStripDiacritics: String
