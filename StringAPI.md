@@ -314,18 +314,35 @@ pre-allocate storage for the given capacity
 等价于 `self + aString`
 
 ### `func stringByApplyingTransform(transform: String, reverse: Bool) -> String?`
-    let NSStringTransformLatinToKatakana: String
-    let NSStringTransformLatinToHiragana: String
-    let NSStringTransformLatinToHangul: String
-    let NSStringTransformLatinToArabic: String
-    let NSStringTransformLatinToHebrew: String
-    let NSStringTransformLatinToThai: String
-    let NSStringTransformLatinToCyrillic: String
-    let NSStringTransformToLatin: String
-    let NSStringTransformMandarinToLatin: String
-    let NSStringTransformHiraganaToKatakana: String
-    let NSStringTransformFullwidthToHalfwidth: String
-    let NSStringTransformToXMLHex: String
-    let NSStringTransformToUnicodeName: String
-    let NSStringTransformStripCombiningMarks: String
-    let NSStringTransformStripDiacritics: String
+    let NSStringTransformLatinToKatakana: String // 字母转片假名
+    let NSStringTransformLatinToHiragana: String // 字母转平假名
+    let NSStringTransformLatinToHangul: String // 字母转韩语
+    let NSStringTransformLatinToArabic: String // 字母转阿拉伯语
+    let NSStringTransformLatinToHebrew: String // 字母转希伯来语
+    let NSStringTransformLatinToThai: String // 字母转泰语
+    let NSStringTransformLatinToCyrillic: String // 字母转西里尔字母（俄语）
+    let NSStringTransformToLatin: String // 转换为字母（带音调）
+    let NSStringTransformMandarinToLatin: String // 汉语转字母（带音调）不能reverse
+    let NSStringTransformHiraganaToKatakana: String // 平假名转片假名
+    let NSStringTransformFullwidthToHalfwidth: String // 全宽转半宽
+    let NSStringTransformToXMLHex: String 
+    let NSStringTransformToUnicodeName: String // 转换为Unicode名
+    let NSStringTransformStripCombiningMarks: String // 移除combining mark
+    let NSStringTransformStripDiacritics: String // 移除变音符
+对字符串进行上述操作返回操作后的字符串，可能为空。reverse表示进行transform的逆操作，部分逆操作始终返回nil。
+
+一些常用的其他方式：
+
+    "HELLO WORLD".stringByApplyingTransform("Lower", reverse: false) // hello world
+    
+    "HELLO WORLD".stringByApplyingTransform("[AEIOU] Lower", reverse: false) // HeLLo WoRLD
+    
+    "上海".stringByApplyingTransform("Any-Latin; Latin-ASCII; Lower", reverse: false) // shang hai
+    
+    "\"Make it so,\" said Picard.".stringByApplyingTransform("[:Punctuation:] remove", reverse: false) // Make it so said Picard
+    
+    "5 plus 6 equals 11 👍!".stringByApplyingTransform("[:^Letter:] remove", reverse: false) // plusequals
+    
+    "\"How's it going?\"".stringByApplyingTransform("Publishing", reverse: false) // “How’s it going?”
+    
+    
