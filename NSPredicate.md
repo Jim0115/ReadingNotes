@@ -1,5 +1,5 @@
 # NSPredicate
-NSPredicate定义了filter的逻辑约束条件。
+NSPredicate定义了filter的逻辑约束条件。使用NSPredicate进行操作的对象必须继承自NSObject。
 
 ## 基础运算符
 * 等于：`=, ==`
@@ -29,4 +29,11 @@ NSPredicate定义了filter的逻辑约束条件。
 `"self matches %@", "^(13[0-9]|15[012356789]|17[678]|18[0-9]|14[57])[0-9]{8}$"`
 * `[c]`表示忽略大小写 `[d]`表示忽略音调 `CONTAINS[cd]`表示忽略大小写和音调的包含
 
-
+## 筛选集合类型
+* `ANY, SOME` 集合中的任意一个元素满足条件
+* `ALL` 集合中的所有元素都满足条件
+* `NONE` 集合中没有满足条件的元素
+* `IN` 左式元素是否在集合中   
+`[NSPredicate predicateWithFormat: @"attribute IN %@", aCollection]`  
+collection必须是NSArray，NSSet，NSDictionary或对应可变形式。
+* 
