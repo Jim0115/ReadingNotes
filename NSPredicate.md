@@ -56,3 +56,9 @@ collection必须是NSArray，NSSet，NSDictionary或对应可变形式。
 
 ## 保留关键字
 `AND, OR, IN, NOT, ALL, ANY, SOME, NONE, LIKE, CASEINSENSITIVE, CI, MATCHES, CONTAINS, BEGINSWITH, ENDSWITH, BETWEEN, NULL, NIL, SELF, TRUE, YES, FALSE, NO, FIRST, LAST, SIZE, ANYKEY, SUBQUERY, CAST, TRUEPREDICATE, FALSEPREDICATE, UTI-CONFORMS-TO, UTI-EQUALS`
+
+## Examples
+找出两个数组中共同的元素：  
+`NSPredicate(format: "not self in %@", array2)`  
+找出array1中不属于array2的元素：  
+`let predicate = NSPredicate(format: "not self in %@", a2)`
