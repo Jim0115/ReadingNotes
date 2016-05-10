@@ -36,4 +36,23 @@ NSPredicate定义了filter的逻辑约束条件。使用NSPredicate进行操作�
 * `IN` 左式元素是否在集合中   
 `[NSPredicate predicateWithFormat: @"attribute IN %@", aCollection]`  
 collection必须是NSArray，NSSet，NSDictionary或对应可变形式。
-* 
+* `array[INDEX]` 数组的index位置的元素是否满足条件
+* `array[FIRST]` 数组的首元素是否满足条件
+* `array[LAST]` 数组的末尾元素是否满足条件
+* `array[SIZE]` 数组的大小(元素的个数)是否满足条件
+
+## 字面量
+* `FALSE, NO` 逻辑否
+* `TRUE, YES` 逻辑是
+* `NULL, NIL` 空值
+* `SELF` 需要被判断的值
+* `"text", 'text'` 字符串
+* `{ 'comma', 'separated', 'literal', 'array' }` 数组
+* `1, 27, 2.71828, 19.75` 整数和小数
+* `9.2e-5` 科学计数法
+* `0x` 十六进制前缀
+* `0o` 八进制前缀
+* `0b` 二进制前缀
+
+## 保留关键字
+`AND, OR, IN, NOT, ALL, ANY, SOME, NONE, LIKE, CASEINSENSITIVE, CI, MATCHES, CONTAINS, BEGINSWITH, ENDSWITH, BETWEEN, NULL, NIL, SELF, TRUE, YES, FALSE, NO, FIRST, LAST, SIZE, ANYKEY, SUBQUERY, CAST, TRUEPREDICATE, FALSEPREDICATE, UTI-CONFORMS-TO, UTI-EQUALS`
