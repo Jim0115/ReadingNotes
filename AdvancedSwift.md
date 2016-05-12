@@ -32,3 +32,21 @@
 
 `copy()`和`mutableCopy()`类似于OC，两个方法的返回值都是`AnyObject`  
 Swift使用了`copy-on-write`技术，确保copy后的值只有在真正被修改时才进行copy。
+
+## SequenceType & CollectionType
+`SequenceType`是所有集合类型的父协议，提供了for-in访问。
+
+    for element in sequence {
+        if ... some condition { break }
+    }
+     
+    for element in sequence {
+        // Not guaranteed to continue from the next element.
+    }
+    
+`CollectionType`继承自`SequenceType`和`Indexable`，为可使用index访问的集合类型。但index未必都是Int类型，比如`CharacterView`的index类型为`String.CharacterView.Index`，`Set`的index类型为`SetIndex<Element : Hashable>`。但这二者都间接实现了`SequenceType`协议，可以使用for-in进行遍历。
+
+## GeneratorType
+    class ConstantGenerator: GeneratorType { 
+      typealias Element = Int      func next() -> Element? {        return 1      }    }
+实现`GeneratorType`需要两部分。1. 定义`Element`的类型 2. 实现`next()`方法。  
