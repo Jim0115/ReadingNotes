@@ -194,3 +194,22 @@ Then use it to answer all your `UITableViewDataSource` protocol's questions.
     _resultController = [[NSFetchedResultsController alloc] initWithFetchRequest:request managedObjectContext:self.context sectionNameKeyPath:@"date" cacheName:@"recordCache"];
 
 cacheName为nil时不会缓存
+
+# Class 15 @May 14, 2016
+### Embed Segue
+使用一个Container将另一个VC显示为当前VC的一部分。  
+系统将在初始化是自动调用`performSegue`方法，在`prepareForSegue`方法中对`segue.destinationViewController`进行操作即可对ContainerVC进行初始化。  
+调用`performSegue`方法将会出错
+
+# Class 16 @ May 14, 2016
+### Unwind Segue
+使用unwind segue进行返回，可以一次解开多层。  
+unwind segue是唯一一种不创建新VC的segue，只是返回之前的VC。
+
+### dismissViewController
+Dismisses the view controller that was presented modally by the view controller.  
+实际上应该调用`presentingViewController.dismissViewControllerAnimated...`  
+If you call this method on the presented view controller itself, UIKit asks the presenting view controller to handle the dismissal.
+
+### UITextField
+`Editing Changed`用来记录输入文本的改变
