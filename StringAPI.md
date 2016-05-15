@@ -346,3 +346,39 @@ pre-allocate storage for the given capacity
     "\"How's it going?\"".stringByApplyingTransform("Publishing", reverse: false) // “How’s it going?”
     
     
+### `func stringByFoldingWithOptions(options: NSStringCompareOptions, locale: NSLocale?) -> String`
+[Foundation] Returns a string with the given character folding options applied.
+
+### `func stringByPaddingToLength(newLength: Int, withString padString: String, startingAtIndex padIndex: Int) -> String`
+[Foundation] Returns a new string formed from the String by either removing characters from the end, or by appending as many occurrences as necessary of a given pad string.  
+使用`padString`将字符串填充到`newLength`长度，从`padIndex`位置开始填充。  
+`"123".stringByPaddingToLength(20, withString: "hello", startingAtIndex: 2) // 123llohellohellohell`
+
+### `func stringByReplacingCharactersInRange(range: Range<Index>, withString replacement: String) -> String`
+[Foundation] Returns a new string in which the characters in a specified range of the String are replaced by a given string.  
+使用`replacement`替换`range`内的字符串。
+
+### `func stringByReplacingOccurrencesOfString(target: String, withString replacement: String, options: NSStringCompareOptions = default, range searchRange: Range<Index>? = default) -> String`
+[Foundation] Returns a new string in which all occurrences of a target string in a specified range of the String are replaced by another given string.  
+在`range`内使用`replacement`替换`target`。
+
+### `func stringByTrimmingCharactersInSet(set: NSCharacterSet) -> String`
+[Foundation] Returns a new string made by removing from both ends of the String characters contained in a given character set.  
+去掉字符串两端的字符集中的字符
+
+### `func substringFromIndex(index: Index) -> String`
+从头到当前index的子字符串。
+
+### `func substringToIndex(index: Index) -> String`
+从index到字符串末尾的子字符串，不包括index所在位置字符。
+
+### `func substringWithRange(aRange: Range<Index>) -> String`
+获得`range`内的子字符串
+
+### `mutating func write(other: String)`
+Append other to this stream.  
+实现于`OutputStreamType`协议
+
+### `func writeTo<Target : OutputStreamType>(inout target: Target)`
+Write a textual representation of self into target.
+将`self`写入到实现了`OutputStreamType`的`target`中。

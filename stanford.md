@@ -213,3 +213,16 @@ If you call this method on the presented view controller itself, UIKit asks the 
 
 ### UITextField
 `Editing Changed`用来记录输入文本的改变
+
+### Active & background
+active表示App是否是活动的，表示是否接受和处理事件  
+进入background表示应用被搁置，除一些特殊情况外，进入background的App不能进行任何操作
+
+# Class 17 @May 15, 2016
+## Localization
+    [[NSUserDefaults standardUserDefaults] setBool:YES
+                                            forKey:@"NSShowNonLocalizedStrings"];
+                                            
+发现没有被localize的字符串时将log信息。
+### Setting
+设置里的具体App设计基于NSUserDefault，修改设置中的值即修改NSUserDefault。设置中的identifier是设置中的key。
