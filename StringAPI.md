@@ -382,3 +382,9 @@ Append other to this stream.
 ### `func writeTo<Target : OutputStreamType>(inout target: Target)`
 Write a textual representation of self into target.
 将`self`写入到实现了`OutputStreamType`的`target`中。
+
+### `func writeToFile(path: String, atomically useAuxiliaryFile: Bool, encoding enc: NSStringEncoding) throws`
+[Foundation] Writes the contents of the String to a file at a given path using a given encoding.
+
+### `func writeToURL(url: NSURL, atomically useAuxiliaryFile: Bool, encoding enc: NSStringEncoding) throws`
+[Foundation] Writes the contents of the String to the URL specified by url using the specified encoding.
