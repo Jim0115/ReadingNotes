@@ -34,4 +34,25 @@ Core Data provides four store types—SQLite, Binary, XML, and In-Memory (the XM
 4. 一个App可以使用多个context。事实上，由于context只是一个内存中的暂存器，甚至可以通过不同的context对磁盘中的同一份数据进行读取；
 5. context不是线程安全的
 
-
+## Chapter 4: Intermediate Fetching(中间获取)
+### NSFetchRequest: the star of the show
+获取一个`NSFetchRequest`的四种方法：
+    
+    // 1
+    let fetchRequest1 = NSFetchRequest()
+    let entity = NSEntityDescription.entityForName("Person", inManagedObjectContext: managedContext)
+    fetchRequest1.entity = entity
+    
+    // 2
+    let fetchRequest2 = NSFetchRequest(entityName: "Person")
+    
+    // 3 
+    let fetchRequest3: NSFetchRequest? = managedObjectModel.fetchRequestTemplateForName("PeopleFR")
+    
+    // 4
+    let fetchRequest4: NSFetchRequest? = managedObjectModel.fetchRequestFromTemplateWithName("PeopleFR", substitutionVariables: ["NAME" : "Tom"])
+    
+1. 创建一个`fetchRequest`，从`context`通过name获取一个`entity`，将这个`entity`传给`fetchRequest`作为获取`entity`的类型
+2. 方法1的简单方法，直接使用name构造一个`fetchRequest`
+3. 使用XCode中在`NSManagedObjectModel`中预定义的`fetchRequest`可以通过此方法获取
+4. 在方法3创建的`fetchRequest`中加入额外的条件。
