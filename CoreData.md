@@ -56,3 +56,35 @@ Core Data provides four store types—SQLite, Binary, XML, and In-Memory (the XM
 2. 方法1的简单方法，直接使用name构造一个`fetchRequest`
 3. 使用XCode中在`NSManagedObjectModel`中预定义的`fetchRequest`可以通过此方法获取
 4. 在方法3创建的`fetchRequest`中加入额外的条件。
+
+#### NSFetchRequestResultType
+设置`fetchResult`的`resultType`属性可以对获取数据的类型进行选择，有以下四种：
+
+    struct NSFetchRequestResultType : OptionSetType {
+        init(rawValue rawValue: UInt)
+        static var ManagedObjectResultType: NSFetchRequestResultType { get }
+        static var ManagedObjectIDResultType: NSFetchRequestResultType { get }
+        static var DictionaryResultType: NSFetchRequestResultType { get }
+        static var CountResultType: NSFetchRequestResultType { get }
+    }
+    
+* ManagedObjectResultType：返回managed object（默认）
+* ManagedObjectIDResultType：返回object唯一的identifier代替object
+* NSDictionaryResultType：将每个object的所有属性放入一个字典中，返回所有object构成的字典数组。
+* NSCountResultType：返回匹配request的object的个数
+
+
+    `[<DogWalk.Dog: 0x7fe52b7b59d0> (entity: Dog; id: 0xd000000000040000 <x-coredata://4D07D5C6-732F-46FD-9DB9-CD1A029DC670/Dog/p1> ; data: <fault>), <DogWalk.Dog: 0x7fe52b7b6000> (entity: Dog; id: 0xd000000000080000 <x-coredata://4D07D5C6-732F-46FD-9DB9-CD1A029DC670/Dog/p2> ; data: <fault>)]`
+    
+    `[0xd000000000040000 <x-coredata://4D07D5C6-732F-46FD-9DB9-CD1A029DC670/Dog/p1>,
+    0xd000000000080000 <x-coredata://4D07D5C6-732F-46FD-9DB9-CD1A029DC670/Dog/p2>]`
+    
+    `[2]`
+    
+    `[{
+        name = Fido;
+    }, {
+        name = haha;
+    }]`
+    
+对于具体fetchRequest不同resultType的不同结果。
