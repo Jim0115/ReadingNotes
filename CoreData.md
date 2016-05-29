@@ -88,3 +88,70 @@ Core Data provides four store types—SQLite, Binary, XML, and In-Memory (the XM
     }]`
     
 对于具体fetchRequest不同resultType的不同结果。
+
+### NSAsynchronousFetchRequest
+异步fetchrequest，和`NSFetchRequest`同为`NSPersistentStoreRequest`的子类，构造方法如下：
+
+    NSAsynchronousFetchRequest(fetchRequest: NSFetchRequest) { (NSAsynchronousFetchResult) in /* code here */}
+
+使用
+
+    public func executeRequest(request: NSPersistentStoreRequest) -> NSPersistentStoreResult 
+
+方法执行请求，在request的block中对结果进行操作，方法的返回值不一定可用。**注意循环引用问题**
+
+### NSBatchUpdateRequest
+在之前的操作中，修改一个managedObject的内容需要fetch-modify-save，在处理大量数据时很不方便。使用`NSBatchUpdateRequest`可以解决这一问题。`NSBatchUpdateRequest`同样是`NSPersistentStoreRequest`的子类，同样使用`executeRequest`方法执行。类似于SQL中的`update`
+
+    let updateRequest = NSBatchUpdateRequest(entityName: "Dog")
+    
+    updateRequest.predicate = NSPredicate(format: "name == %@", "bar")
+    updateRequest.propertiesToUpdate = ["name" : "foo"]
+    updateRequest.resultType = .UpdatedObjectsCountResultType
+    
+    do {
+      let updateResult = try managedContext.executeRequest(updateRequest) as! NSBatchUpdateResult
+      // do sth here
+    } catch let error as NSError {
+      print(error.localizedDescription)
+    }
+    
+将name为"bar"的Dog的name更改为foo的操作如上。  
+`NSBatchUpdateRequest`的`resultType`有以下三种：
+
+    public enum NSBatchUpdateRequestResultType : UInt {
+      case StatusOnlyResultType // Don't return anything
+      case UpdatedObjectIDsResultType // Return the object IDs of the rows that were updated
+      case UpdatedObjectsCountResultType // Return the number of rows that were updated
+    }
+    
+### NSBatchDeleteRequest
+包装一个`NSFetchRequest`作为删除的标准：
+
+    let fetchRequest = NSFetchRequest(entityName: "Dog")
+    fetchRequest.predicate = NSPredicate(format: "name = %@", "Fido")
+    let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+    deleteRequest.resultType = .ResultTypeCount
+    
+    do {
+      let deleteResult = try managedContext.executeRequest(deleteRequest) as! NSBatchDeleteResult
+      // do sth here
+      print(deleteResult.result)
+    } catch let error as NSError {
+      print(error.localizedDescription)
+    }
+    
+删除所有name为"Fido"的Dog  
+与updateRequest类似，有三种对应的`resultType`：
+
+    public enum NSBatchDeleteRequestResultType : UInt {
+      case ResultTypeStatusOnly // Don't return anything
+      case ResultTypeObjectIDs // Return the object IDs of the rows that were deleted
+      case ResultTypeCount // Return the object IDs of the rows that were deleted
+    }
+    
+##### NSBatchUpdateRequest适用于iOS 8以上，NSBatchDeleteRequest适用于iOS 9以上
+
+---
+
+# Chapter 5: NSFetchResultsController
