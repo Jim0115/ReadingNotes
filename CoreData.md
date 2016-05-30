@@ -155,3 +155,5 @@ Core Data provides four store types—SQLite, Binary, XML, and In-Memory (the XM
 ---
 
 # Chapter 5: NSFetchResultsController
+Core Data通常与TableView，通常的做法是从数据fetch到managedObject，用其作为tableView的dataSource。为了简化这个过程，iOS提供了`NSFetchedResultsController`作为二者间的连接桥梁。  
+对于通常的fetchRequest，不需要指定其sortDescriptor。但对于`NSFetchResultsController`使用的fetchRequest则必须指定至少一个sortDescriptor，否则程序crash。这样做的原因是为了指定tableView中cell的正确顺序。
