@@ -189,3 +189,16 @@ Core Data通常与TableView，通常的做法是从数据fetch到managedObject�
                 
       return cell
     }
+    
+### 分组
+设置`NSFetchResultController`的`sectionNameKeyPath`可以对tableView进行分组，使用`name`属性设置header的title：
+
+    func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+      let team = fetchedResultController.sections![section]
+      return team.name
+    }
+    
+需要注意，一旦设置分组，必须把`NSFetchResultController`的`sortDescriptor`的第一个设置为与`sectionNameKeyPath`相同，否则将出现不能分到对应分组的情况。
+
+### 监视变化
+`NSFetchedResultController`可以监视其model的变化，在变化产生前后通过delegate发送消息。
