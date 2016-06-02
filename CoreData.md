@@ -202,3 +202,15 @@ Core Data通常与TableView，通常的做法是从数据fetch到managedObject�
 
 ### 监视变化
 `NSFetchedResultController`可以监视其model的变化，在变化产生前后通过delegate发送消息。
+
+# Chapter 6: Versioning and Migration
+>When is a migration necessary? The easiest answer to this common question is “when you need to make changes to the data model.”
+
+若Core Data仅仅被用作离线缓存时，则可以简单地删除所有数据并重新构建。
+
+### 迁移数据
+1. Core Data从一个data store拷贝数据到另一个data store；
+2. 根据Relationship Mapping连接所有object；
+3. 强制加上目标model的数据约束
+
+如果期间出现错误，原始数据不会被删除。即仅当全部数据被成功拷贝到另一个store后原始数据才会被删除。
