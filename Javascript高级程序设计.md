@@ -136,4 +136,78 @@ Object的本质是由一组无序的键值对组成的
 typeof的操作数可以是变量，也可以是数值字面量。**typeof是一个操作符而不是一个函数，因此圆括号不是必须的**
 
 #### Undefined类型
+Undefined类型只有一个值，即undefined。在使用var声明变量但并未对其进行初始化时，这个变量的值就是undefined。
 
+    var msg;
+    alert(msg); // "undefined"
+    
+包含undefined值的变量与未定义的变量存在不同，如：
+
+    var msg;
+    alert(msg); // "undefined"
+    
+    alert(age); // error
+    
+对于尚未声明的变量，只能执行一个操作，即使用typeof检测其类型
+    
+    var msg;
+    alert(typeof msg);  // "undefined"
+    
+    alert(typeof age);  // "undefined"
+    
+#### Null类型
+Null类型是第二个只有一个值的类型，这个特殊值为null。null值表示一个空对象指针，这也是`typeof null`返回"object"的原因。
+
+    var person = null;
+    alert(typeof person); // object
+    
+如果定义的对象准备在将来保存一个对象，那么最好将该变量初始化为null。这样，只要直接检查null值旧可以知道相应的变量是否已经保存了一个对象的引用。
+
+    if (car != null) {
+      // do sth with cat
+    }
+
+undefined值是派生自null值的，所以
+    
+    alert(undefined == null) // true
+    
+#### Boolean类型
+Boolean类型只有两个字面值，true和false。不能保证true等于1，false等于0。  
+虽然Boolean类型的值只有两个，但所有类型的值都有与这两个Boolean值等价的值。要将一个值转换为对应的Boolean值，可以调用转型函数Boolean()
+
+    var msg = "hello";
+    alert(Boolean(msg));  // true
+    
+可以对任何类型的值调用`Boolean()`函数，而且总会返回一个Boolean值。至于返回的值是true还是false，取决于转换值的数据类型及实际值。
+
+|  数据类型 | 转换为true的值 | 转换为false的值 |
+| ------------ | ------------- | ------------ |
+| Boolean | true  | false |
+| String | 任何非空字符串  | 空字符串 |
+| Number | 任何非零数字，包括无穷大 | 0和NaN|
+|Object|任何对象|null|
+|Undefined||undefined|
+
+控制流语句将自动执行Boolean转换。在执行这样的转换时，确切的知道使用的是什么变量至关重要。
+
+    var msg = "hello";
+    if (msg) {
+      alert(msg);
+    }
+
+#### Number类型
+    var intNum = 10;
+    alert(intNum); // "10"
+    
+    var octalNum1 = 070;
+    var octalNum2 = 088;
+    alert(octalNum1); // "56"
+    alert(octalNum2); // "88"
+    
+    var hexNum1 = 0xA;
+    var hexNum2 = 0x1f;
+    alert(hexNum1); // 10
+    alert(hexNum2); // 31
+    
+0开头的数字表示8进制，后面的数字必须为0-7，否则将忽略开头的0解析为10进制。  
+0x开头的数字表示10进制，后跟0-9,A-F。A-F大小写无限制。
