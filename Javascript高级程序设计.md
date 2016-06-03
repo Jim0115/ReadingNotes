@@ -63,3 +63,77 @@ June 2, 2016 借于学校图书馆
     </html>
     
 #### 延迟脚本
+在HTML4.01中定义了defer属性，表示脚本在执行过程中不会影响页面的构造。所有，脚本会被延迟到页面解析完毕后再执行。如：
+
+    <html>
+      <head>
+        <title>First page with Javascript</title>
+        <script type="text/javascript" defer="defer" src="example.js"></script>
+      </head>
+      <body>
+        Hello World!
+      </body>
+    </html>
+    
+#### 嵌入代码和外部文件
+在HTML中嵌入JavaScript代码虽然没有问题，但一般认为最好的做法还是尽可能使用外部文件。使用外部文件具有以下优点：
+
+* 可维护性：开发人员在不触及HTML标记的情况下编辑JS代码
+* 可缓存：如果两个页面使用同一文件，那么这个文件只需被下载一次
+* 可适应未来：HTML和XHTML包含外部文件的语法相同
+
+## 第三章：基本概念
+### 语法
+#### 标识符
+变量、函数、属性的名字，或函数的参数，是按照以下规则组合的一个或多个字符：
+
+* 由字母、下划线_、数字、美元符$组成  
+* 第一个字符不能是数字
+
+#### 风格
+语句结尾的分号不是必须的，但建议在任何时候都不应该省略  
+即使if/for/while等只有一条语句，仍然建议使用大括号
+
+### 变量
+变量是松散类型的，可以用来保存任何类型的数据，即每个变量仅仅是一个用于保存值的占位符而已。  
+定义变量使用`var`：
+
+    var message;
+    var hello = "hello world";
+    var num = 3;
+    
+### 数据类型
+基本数据类型：
+
+* Undefined
+* Null
+* Boolean
+* Number
+* String
+
+复杂数据类型：Object  
+Object的本质是由一组无序的键值对组成的  
+
+不支持其他任何自定义类型
+
+#### typeof操作符
+使用typeof操作符将返回下列某个字符串：
+
+* "undefined" 值未定义
+* "boolean" 布尔值
+* "string" 字符串
+* "number" 数值
+* "object" 对象或null
+* "function" 函数
+
+例子：
+
+    var msg = "sth";
+    alert(typeof msg);  // string
+    alert(typeof(msg));  // string
+    alert(typeof 20);  // number 
+
+typeof的操作数可以是变量，也可以是数值字面量。**typeof是一个操作符而不是一个函数，因此圆括号不是必须的**
+
+#### Undefined类型
+
