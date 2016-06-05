@@ -3,6 +3,25 @@
 ### 构造方法
 `init(pattern pattern: String, options options: NSRegularExpressionOptions) throws`
 
+#### NSRegularExpressionOptions
+    struct NSRegularExpressionOptions : OptionSetType {
+        init(rawValue rawValue: UInt)
+        static var CaseInsensitive: NSRegularExpressionOptions { get }
+        static var AllowCommentsAndWhitespace: NSRegularExpressionOptions { get }
+        static var IgnoreMetacharacters: NSRegularExpressionOptions { get }
+        static var DotMatchesLineSeparators: NSRegularExpressionOptions { get }
+        static var AnchorsMatchLines: NSRegularExpressionOptions { get }
+        static var UseUnixLineSeparators: NSRegularExpressionOptions { get }
+        static var UseUnicodeWordBoundaries: NSRegularExpressionOptions { get }
+    }
+    
+* CaseInsensitive：忽略大小写
+* AllowCommentsAndWhitespace：忽略空格以及#开头的注释
+* IgnoreMetacharacters：将整个pattern视作一个字符串
+* DotMatchesLineSeparators：允许`.`匹配换行符
+* AnchorsMatchLines：允许`^`和`$`匹配行的开始和结束位置
+* UseUnixLineSeparators：只把`\n`视作换行符（默认匹配所有类型换行符）
+* UseUnicodeWordBoundaries: Use Unicode TR#29 to specify word boundaries
 ### 保留字
 * [
 * ()
@@ -43,3 +62,6 @@
 * 1到10个字符长度的标准英文字母 `^\w{1,10}$`
 * 标准英文字母加上`'`符号 `^[\w']{1,10}$`
 * 出生日期，以下格式之一：dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy，且在01/01/1900和31/12/2099之间 `^(0[1-9]|1[012])[\\/\\.-](0[1-9]|[12]\\d|3[01])[\\/\\.-](19|20)\\d{2}$`
+
+### 匹配
+使用`func matchesInString(_ string: String, options options: NSMatchingOptions, range range: NSRange) -> [NSTextCheckingResult]`对字符串进行匹配  
