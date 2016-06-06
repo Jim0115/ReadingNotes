@@ -64,4 +64,24 @@
 * 出生日期，以下格式之一：dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy，且在01/01/1900和31/12/2099之间 `^(0[1-9]|1[012])[\\/\\.-](0[1-9]|[12]\\d|3[01])[\\/\\.-](19|20)\\d{2}$`
 
 ### 匹配
-使用`func matchesInString(_ string: String, options options: NSMatchingOptions, range range: NSRange) -> [NSTextCheckingResult]`对字符串进行匹配  
+使用`func matchesInString(_ string: String, options options: NSMatchingOptions, range range: NSRange) -> [NSTextCheckingResult]`对字符串进行匹配，返回匹配到的结果。
+
+### 替换
+对于每个捕获组捕获到的内容可以单独取出进行替换。
+
+    let str = "Jan 15, 1995"
+    
+    let regex = "^(\\w{3})\\s(\\d{2}),\\s(\\d{4})"
+    let replacePattern = "$0 $3 and $1 and $2"
+    
+    do {
+      let expression = try NSRegularExpression(pattern: regex, options: .CaseInsensitive)
+      let replacement = expression.stringByReplacingMatchesInString(str, options: [], range: NSRange(location: 0, length: str.characters.count), withTemplate: replacePattern)
+      print(replacement) // Jan 15, 1995 1995 and Jan and 15
+    } catch let error as NSError {
+      print(error.localizedDescription)
+    }
+
+
+`$0`代表原字符串，从`$1`开始代表对应的捕获组捕获到的字符串，可以根据需要进行选取。  
+使用`func replaceMatchesInString(_ string: NSMutableString, options options: NSMatchingOptions, range range: NSRange, withTemplate templ: String) -> Int`可以直接对原字符串进行替换。
