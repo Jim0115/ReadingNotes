@@ -96,3 +96,51 @@ OC的重要工作都由“运行期组件”（runtime component）而非编译�
     
 这个常量在头文件中“声明”，且在实现文件中“定义”。  
 编译器看到头文件中的`extern`关键字，这个关键字是要告诉编译器，在全局符号表中将会有一个名叫`FooStringConstant`的符号。也就是说，编译器无需查看其定义，即允许代码使用此常量。因为它知道，当链接成二进制文件之后，一定能找到这个常量。
+
+### 第5条：用枚举表示状态、选项、状态码
+#### 状态：
+    enum EOCConnectionState {
+        EOCConnectionStateDisconnected,
+        EOCConnectionStateConnecting,
+        EOCConnectionStateConnected,
+    };
+    
+    typedef enum EOCConnectionState EOCConnectionState;
+    
+    EOCConnectionState state = EOCConnectionStateConnected;
+    
+#### 选项：
+    enum UIViewAutoresizing {
+        UIViewAutoresizingNone                 = 0,
+        UIViewAutoresizingFlexibleLeftMargin   = 1 << 0,
+        UIViewAutoresizingFlexibleWidth        = 1 << 1,
+        UIViewAutoresizingFlexibleRightMargin  = 1 << 2,
+        UIViewAutoresizingFlexibleTopMargin    = 1 << 3,
+        UIViewAutoresizingFlexibleHeight       = 1 << 4,
+        UIViewAutoresizingFlexibleBottomMargin = 1 << 5
+    }
+使用按位或`|`组合多个选项。  
+`UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin`  
+使用按位与`&`判断是否启用某个选项：  
+
+    if (resizing & UIViewAutoresizingFlexibleWidth) {
+      // UIViewAutoresizingFlexibleWidth is set
+    }
+    
+#### Foundation框架中的宏定义
+    typedef NS_ENUM(NSUInteger, EOCConnectionState) {
+      EOCConnectionStateDisconnected,
+      EOCConnectionStateConnecting,
+      EOCConnectionStateConnected,
+    };
+  
+    typedef NS_OPTIONS(NSUInteger, EOCPermittedDirection) {
+      EOCPermittedDirectionUp = 1 << 0,
+      EOCPermittedDirectionDown = 1 << 1,
+      EOCPermittedDirectionLeft = 1 << 2,
+      EOCPermittedDirectionRight = 1 << 3,
+    };
+通常使用宏定义方式，会针对不同情况进行选择，保证枚举可用。
+
+#### 枚举与switch
+枚举类型经常与switch搭配使用。但在switch枚举类型时，最好不要加上default分支。这样的话，如果稍后又加了一种状态，那么编译器就会发出警告，提示新加入的状态没有在switch分支中处理。如果写上了default分支，那么它就会处理这个新状态，从而导致编译器不发出警告信息。
