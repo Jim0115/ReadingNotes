@@ -260,3 +260,6 @@ Boolean类型只有两个字面值，true和false。不能保证true等于1，fa
     alert(Number("")); // 0
     alert(Number("000011")); // 11
     alert(Number(true)); // 1
+    
+`parseInt()`:  
+忽略字符前面的空格，知道找到第一个非空字符。如果第一个非空字符不是负号或数字字符，parseInt()
