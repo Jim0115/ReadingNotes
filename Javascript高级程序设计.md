@@ -219,3 +219,36 @@ Boolean类型只有两个字面值，true和false。不能保证true等于1，fa
     var floatNum3 = .1; // not recommand
     
 由于保存浮点数所需内存空间为保存整数的两倍，所以如果小数点后没有跟任何数字或小数点后数字为0，则该值会被保存为整数。
+
+##### 数值范围
+最大数值`Number.MAX_VALUE`，通常是1.7976931348623157e+308。  
+最小数值`Number.MIN_VALUE`，通常是5e-324。  
+超出这个范围的数字自动转换为`Infinity`和`-Infinity`。将无法继续参与计算。  
+`isFinity()`函数判断数值是否为有穷的。
+
+##### NaN
+表示原本要返回数值的操作数未返回数值的情况。任何数值除以0会返回NaN，因此不会影响其他代码的执行。  
+任何涉及NaN的操作都会返回NaN。NaN与任何数都不相等，包括NaN本身。
+使用`isNaN()`函数判断是否“不是数值”。
+
+    alert(isNaN(NaN)); // true
+    alert(isNaN(10)); // false 
+    alert(isNaN("10")); // false
+    alert(isNaN("Blue")); // true
+    alert(isNaN(true)); // false
+    alert(isNaN("true")); // true
+    alert(isNaN("0xaa")); // false
+    
+##### 数值转换
+有3个函数可以将非数值转换为数值:`Number()`,`parseInt()`和`parseFloat()`
+
+`Number()`: 
+
+* true -> 1 / false -> 0
+* 数字不转换
+* null -> 0
+* undefined -> NaN
+* 字符串
+    * 字符串只包含数字，转换为10进制数值，忽略前导0 `"011" -> 11 / "123" -> 123`
+    * 有效的浮点格式转换为浮点数 `"1.1" -> 1.1`
+    * 有效的16进制格式，转换为对应的10进制 `"0xf" -> 15`
