@@ -262,4 +262,54 @@ Boolean类型只有两个字面值，true和false。不能保证true等于1，fa
     alert(Number(true)); // 1
     
 `parseInt()`:  
-忽略字符前面的空格，知道找到第一个非空字符。如果第一个非空字符不是负号或数字字符，parseInt()
+忽略字符前面的空格，知道找到第一个非空字符。如果第一个非空字符不是负号或数字字符，parseInt()返回NaN，对空字符串同样返回NaN。如果第一个字符是数字字符，则继续解析第二个字符，直到遇到非数字字符或字符串结束。parseInt()同样可以识别出各种进制的数字。
+
+    alert(parseInt("1234blue")); // 1234
+    alert(parseInt("")); // NaN
+    alert(parseInt("0xa")); // 10
+    alert(parseInt(22.5)); // 22
+    alert(parseInt("070", 8)); // 56
+    alert(parseInt("70")); // 70
+    alert(parseInt("0xfqwer")); // 15
+    
+推荐在任何情况下都明确指定基数，避免错误解析。  
+<br/>
+`parseFloat()`:  
+与parseInt()类似，也是从第一个字符开始解析，直到字符串末尾或遇到无效字符。不同的是，parseFloat()遇到的一个小数点是有效的，将被视为浮点数中的小数点。另外，parseFloat()只解析十进制值。最后，没有小数点或小数点后都是0，会返回整数。
+
+    alert(parseFloat("1234blue")); // 1234
+    alert(parseFloat("0xa")); // 0    
+    alert(parseFloat("22.5")); // 22.5
+    alert(parseFloat("22.34.5")); // 22.34
+    alert(parseFloat("0908.5")); // 908.5
+    alert(parseFloat("3e5")); // 300000
+    
+#### String类型
+字符串的长度可以通过其`length`属性获得。  
+##### 不可变 
+字符串都是不可变的。要改变一个字符串，首先要销毁原字符串，在用新字符串去填充该变量。
+
+    var str = "Java";
+    str += "Script";
+    
+创建"Java" -> 创建"Script" -> 创建"JavaScript" -> 销毁"Java"和"Script"  
+##### 转换为字符串
+使用`toString()`方法获得对应的字符串，除null和undefined外都有一个`toString()`方法。  
+数值的`toString()`方法可以传递一个参数，表示转换的目标进制。范围是2-36。  
+<br/>
+使用`String()`方法转换为字符串：
+
+* 如果有`toString()`方法，调用该方法
+* 如果为null，返回"null"
+* 如果为undefined，返回"undefined"
+
+### 函数
+    function functionName(arg1, arg2, ... , argN) {
+        statements
+    }
+函数在定义时不必指定返回值。实际上，任何函数在任何时候都可以通过return返回值。  
+函数在执行return语句之后停止并自动退出。  
+不带有返回值的return语句返回undefined。  
+>推荐的做法是要么让函数始终都返回一个值，要么永远都不要返回值。否则会给调试带来不便。
+
+#### 参数
