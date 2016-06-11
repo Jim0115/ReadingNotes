@@ -313,4 +313,42 @@ Boolean类型只有两个字面值，true和false。不能保证true等于1，fa
 >推荐的做法是要么让函数始终都返回一个值，要么永远都不要返回值。否则会给调试带来不便。
 
 #### 参数
-函数不介意传递进来多少参数，也不在乎传递进来的参数是什么类型。也就是说，即使定义的函数只接受两个参数，在调用这个函数时也未必一定要传递两个参数。可以这样做的原因是，
+函数不介意传递进来多少参数，也不在乎传递进来的参数是什么类型。也就是说，即使定义的函数只接受两个参数，在调用这个函数时也未必一定要传递两个参数。可以这样做的原因是，函数的参数在内部是用一个数组来表示的。函数接收到的始终是这个数组，而不关心数组包含哪些参数。在函数内部可以通过`arguments`访问这个参数数组，从中获取参数。  
+其实，`arguments`只是与数组类似（并不是Array的实例）。可以使用方括号访问每一个元素。使用`length`获取参数数量。  
+不能使用for-in遍历`arguments`：
+
+    function sayHello(name, message) {
+      for (var arg in arguments) {
+        alert(arg); // 0 1 2 3 4 5 6 7 8
+      }
+    }
+    
+    sayHello("Jack", "how's going.",34,5,1,7,5,4,3);
+    
+判断参数的个数可以一定程度上做到重载：
+
+    function doAdd() {
+      if (arguments.length == 1) {
+        alert(arguments[0] + 10);
+      } else if (arguments.length == 0) {
+        alert("Nothing input");
+      } else {
+        var ans = 0;
+        for (var i = 0; i < arguments.length; i++) {
+          ans += arguments[i];
+        }
+        alert(ans);
+      }
+    }
+    
+    doAdd();
+    doAdd(1);
+    doAdd(1,2,3);
+    
+最后，没有传递值的命名参数将自动被赋予undefined，这和声明变量但没有初始化相同。  
+所有参数都是值，无法通过引用传递参数。
+
+#### 没有重载
+函数参数由包含0到多个值的数组表示的，所以函数没有签名，无法实现函数重载。  
+如果定义了两个名字相同的函数，则后定义的函数覆盖原先定义的函数。
+
