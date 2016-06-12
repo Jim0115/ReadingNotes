@@ -58,3 +58,64 @@ Swift支持操作符重载，语法如下所示：
       
       required init() { }
     }
+    
+### Protocol Extension
+从Swift 2 开始，extension可以用于协议，拓展中实现的方法作为实现拓展的类型的默认实现。
+
+    protocol FooProtocol {
+    }
+    
+    extension FooProtocol {
+      func foo() {
+        print("foo")
+      }
+    }
+    
+    class A: FooProtocol {
+    
+    }
+    
+    A().foo() // "foo"
+    
+如果在接口拓展中，实现了接口之外的方法。
+
+    protocol A1 {
+      func foo1() -> String
+    }
+    
+    extension A1 {
+      func foo1() -> String {
+        return "foo1"
+      }
+      
+      func foo2() -> String {
+        return "foo2"
+      }
+    }
+    
+    class B1: A1 {
+      func foo1() -> String {
+        return "new foo1"
+      }
+      
+      func foo2() -> String {
+        return "new foo2"
+      }
+    }
+    
+    let b1 = B1()
+    
+    b1.foo1() // new foo1
+    b1.foo2() // new foo2
+    
+    let b2 = B1() as A1
+    
+    b2.foo1() // new foo1
+    b2.foo2() // foo2
+    
+方法的调用遵循以下规则：
+
+* 如果类型推断得到的是实际类型：类中的实现将被调用；如果类型中没有实现，那么接口扩展中的默认实现将被使用
+* 如果类型推断得到的是接口
+    * 如果方法在接口中进行了定义，那么类型中的实现将被调用；如果类型中没有实现，那么接口扩展中的默认实现将被使用
+    * 如果方法没有在接口中定义，直接调用默认实现
