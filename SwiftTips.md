@@ -119,3 +119,89 @@ Swift支持操作符重载，语法如下所示：
 * 如果类型推断得到的是接口
     * 如果方法在接口中进行了定义，那么类型中的实现将被调用；如果类型中没有实现，那么接口扩展中的默认实现将被使用
     * 如果方法没有在接口中定义，直接调用默认实现
+    
+### 使用GCD实现延迟执行的实现
+    typealias Task = (cancel: Bool) -> Void
+    
+    func delay(time: NSTimeInterval, task: () -> ()) -> Task? {
+      func dispatch_later(block: () -> ()) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(time * Double(NSEC_PER_SEC))), dispatch_get_main_queue(), block)
+      }
+      
+      var closure: dispatch_block_t? = task
+      var result: Task?
+      
+      let delayedClosure: Task = {
+        cancel in
+        if let internalClosure = closure {
+          if cancel == false {
+            dispatch_async(dispatch_get_main_queue(), internalClosure)
+          }
+        }
+        closure = nil
+        result = nil
+      }
+      
+      result = delayedClosure
+      
+      dispatch_later { 
+        if let delayedClosure = result {
+          delayedClosure(cancel: false)
+        }
+      }
+      
+      return result
+    }
+    
+    func cancel(task: Task?) {
+      task?(cancel: true)
+    }
+    
+### 使用Category(Extension)给已有的类添加成员变量
+Obj-C: 导入runtime.h头文件   
+`UIButton+Name.h`
+
+    #import <UIKit/UIKit.h>
+    
+    @interface UIButton (Name)
+    
+    @property (nonatomic, copy) NSString* name;
+    
+    @end
+
+`UIButton+Name.m`
+
+    #import "UIButton+Name.h"
+    #import <objc/runtime.h>
+    
+    @implementation UIButton (Name)
+    
+    // void* key;
+    const char key;
+    
+    - (NSString *)name {
+      return objc_getAssociatedObject(self, &key);
+    }
+    
+    - (void)setName:(NSString *)name {
+      objc_setAssociatedObject(self, &key, name, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+
+    @end
+使用前需要导入类簇头文件。  
+
+---
+Swift:
+    
+    var key: Void?
+
+    extension UIButton {
+      var name: String? {
+        get {
+          return objc_getAssociatedObject(self, &key) as? String
+        }
+        set {
+          objc_setAssociatedObject(self, &key, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+      }
+    }
