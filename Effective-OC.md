@@ -164,4 +164,183 @@ OC的重要工作都由“运行期组件”（runtime component）而非编译�
 具备readwrite特质的属性拥有getter和setter。若该属性由@synthesize实现，则编译器会自动生成这两个方法。  
 具备readonly特质的属性仅拥有获取方法。只有当属性由@synthesize实现，编译器才会为其合成获取方法。可以将某个属性对外公开为只读属性，然后在“class-continuation分类”中将其重新定义为读写属性。（详见第27条）
 ##### 内存管理语义
-属性用于封装数据，而数据要有
+属性用于封装数据，而数据要有“具体的所有权语义”（concrete ownership semantic）。
+
+* `assign` “设置方法”只会执行针对“纯量类型”（CGFloat，NSInteger等）的简单赋值操作。
+* `string` 定义了一种“拥有关系”（owning relationship）。设置新值时，会先保留新值，并释放旧值，然后将新值设置上去。
+* `weak` 定义了一种“非拥有关系”（nonowning relationship）。为这种属性设置新值时，设置方法既不保留新值，也不释放旧值。在属性所指对象销毁时，属性值被置为nil。
+* `unsafe_unretained` 适用于对象类型，不保留新值。当属性所指对象销毁时，属性值不会自动清空。
+* `copy` 将传递的新值进行copy。通常适用于拥有可变形式子类的属性，如`NSString`, `NSArray`, `NSSet`, `NSDictionary`等。
+
+##### 方法名
+指定存取方法的方法名：
+
+* `getter=<name>` 如果想为某Boolean型变量的获取方法加上"is"前缀，就可以使用这个方法来指定 `@property (nonatomic, getter=isOn) BOOL on;`
+* `setter=<name>` 注意：如果自己实现这些存取方法，应该保证其具备相关属性所声明的特质。比如，如果将某个属性声明为copy，就应该在设置方法中拷贝相关对象。  
+
+在其他方法设置属性值，同样要遵守属性定义中宣称的语义。
+    
+    // EOCPerson.h
+    @interface EOCPerson : NSObject
+
+    @property (nonatomic, copy, readonly) NSString* firstName;
+    @property (nonatomic, copy, readonly) NSString* lastName;
+    
+    - (instancetype)initWithFirstName:(NSString*)firstName
+                             lastName:(NSString*)lastName;
+    
+    @end
+    
+    
+    // EOCPerson.m
+    @implementation EOCPerson
+    
+    - (instancetype)initWithFirstName:(NSString *)firstName lastName:(NSString *)lastName {
+      if (self = [super init]) {
+        _lastName = [lastName copy];
+        _firstName = [firstName copy];
+      }
+      
+      return self;
+    }
+    
+    @end
+    
+### 第7条：在对象内部尽量直接访问实例变量
+通过属性和直接访问实例变量有一下几点区别：
+
+* 由于不经过Objective-C的“方法派发”（见第11条）步骤，所以直接访问实例变量速度较快。
+* 直接访问实例变量时，不会调用其设置方法，这就绕过了“内存管理语义”。
+* 直接访问实例变量，不会触发“键值观测”（Key-Value Observing, KVO）通知。这样做是否会产生问题，还取决于具体的对象行为。
+* 通过属性访问有助于排查错误，因为可以给“获取方法”和“设置方法”添加断点，监控属性的调用者及其访问时机。
+
+一个合理的折中方案是，写入实例变量时，通过“设置方法”，读取实例变量时，直接读取。使用此种方法需要注意几个问题：  
+    
+1. 在初始化方法中，总是应该直接访问实例变量，因为子类可能会override设置方法
+2. 另外，使用“惰性初始化”（lazy initialization）。在这种情况下，必须通过“获取方法”来访问属性，否则，实例变量永远不会被初始化。
+
+### 第8条：理解“对象等同性”
+OC中`==`操作比较的是两个指针本身，而不是其所指的对象。应该使用NSObject协议中声明的`isEqual`方法来判断两个对象的等同性。一般来说，两个不用类型的对象总是不相等的。某些对象提供了特殊的“等同性判定方法”，如果已经知道两个对象同属于一个类，就可以使用这种方法。
+
+    NSString* foo = @"Badger 123";
+    NSString* bar = [NSString stringWithFormat:@"Badger %d", 123];
+  
+    NSLog(@"%d %d %d", foo == bar, [foo isEqual:bar], [foo isEqualToString:bar]); // 0 1 1 
+    
+`isEqualToString:`即为`NSString`实现的独有的判断方法。传递给该方法的对象必须是`NSString`，否则结果未定义。调用该方法比调用`isEqual:`快，后者还要执行额外的步骤，因为不知道受测对象的类型。
+
+`NSObject`协议中有两个用于判断等同性的关键方法：
+
+    - (BOOL)isEqual:(id)object;
+    - (NSUInteger)hash;
+    
+`NSObject`对这两个类的默认实现是：当且仅当“指针值”完全相等时，两个对象才相等。如果想在自定义对象中正确override此方法，需要遵守一定约定。如果`isEqual:`方法判断两个对象相等，那么其`hash`方法也必须返回同一个值。但是，如果两个对象的`hash`方法返回同一个值，那么`isEqual:`方法未必认为二者相等。  
+对于一个拥有`firstName`,`lastName`,`age`属性的`EOCPerson`的`isEqual:`方法可以写成：
+
+    - (BOOL)isEqual:(id)object {
+      if (self == object) return YES;
+      if ([self class] != [object class]) return NO;
+      
+      EOCPerson* otherPerson = (EOCPerson*)object;
+      
+      if (![_firstName isEqualToString:otherPerson.firstName]) return NO;
+      if (![_lastName isEqualToString:otherPerson.lastName]) return NO;
+      if (_age != otherPerson.age) return NO;
+      
+      return YES;
+    }
+    
+`hash`方法的一种实现方法：
+    
+    - (NSUInteger)hash {
+      NSUInteger firstNameHash = [_firstName hash];
+      NSUInteger lastNameHash = [_lastName hash];
+      
+      return firstNameHash ^ lastNameHash ^ _age;
+    }
+    
+如果需要经常判断相等性，需要自己创建等同判定方法，因为无需检测参数类型，所以能大大提升检测速度。编写判定方法时，也应该一并重写`isEqual:`方法。常见的实现方式为：如果受测的参数与接收消息的对象属于同一个类，那么就调用自己的判定方法，否则就交给超类来判断。
+
+    - (BOOL)isEqualToPerson:(EOCPerson*)anotherPerson {
+      if (self == anotherPerson) return YES;
+      
+      if (![_firstName isEqualToString:anotherPerson.firstName]) return NO;
+      if (![_lastName isEqualToString:anotherPerson.lastName]) return NO;
+      if (_age != anotherPerson.age) return NO;
+      
+      return YES;
+    }
+    
+    - (BOOL)isEqual:(id)object {
+      if (self.class == [object class]) {
+        return [self isEqualToPerson:object];
+      } else {
+        return [super isEqual:object];
+      }
+    }
+
+### 第9条：以“类簇模式”隐藏实现细节
+假设有一个处理雇员的类，每个雇员都有名字和薪水两个属性，管理者可以命令其执行工作。但是，各种雇员的工作内容却不同。经理在带领雇员做项目时，无需关心每个人如何完成其工作，只需指示其开工即可。  
+
+    // EOCEmployee.h
+    typedef NS_ENUM(NSUInteger, EOCEmployeeType) {
+      EOCEmployeeTypeDeveloper,
+      EOCEmployeeTypeDesigner,
+      EOCEmployeeTypeFinlance,
+    };
+    
+    
+    @interface EOCEmployee : NSObject
+    
+    @property (nonatomic, copy) NSString* name;
+    @property (nonatomic, assign) NSUInteger salary;
+    
+    + (instancetype)employeeWithType:(EOCEmployeeType)type;
+    
+    - (void)doWork;
+    
+    @end
+    
+    
+    // EOCEmployee.m
+    @implementation EOCEmployee
+    
+    + (instancetype)employeeWithType:(EOCEmployeeType)type {
+      switch (type) {
+        case EOCEmployeeTypeDeveloper: {
+          return [EOCEmployeeTypeDeveloper new];
+          break;
+        }
+        case EOCEmployeeTypeDesigner: {
+          return [EOCEmployeeTypeDesigner new];
+          break;
+        }
+        case EOCEmployeeTypeDesigner: {
+          return [EOCEmployeeTypeDesigner new];
+          break;
+        }
+      }
+    }
+    
+    - (void)doWork {
+      // subclasses implement this.
+    }
+    
+    @end
+    
+每个实体类都继承自抽象父类：
+
+    @interface EOCEmployeeDeveloper : EOCEmployee
+    @end
+    
+    @implementation EOCEmployeeDeveloper
+    
+    - (void)doWork {
+      [self writeCode];
+    }
+    
+    @end
+    
+如果对象的类位于某个类簇中，那么在使用内省时就要格外小心。你觉得创建的是某个类的实例，实际上创建的却是其某个子类的实例。
+
+#### Cocoa
