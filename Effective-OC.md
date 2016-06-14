@@ -343,4 +343,79 @@ OC中`==`操作比较的是两个指针本身，而不是其所指的对象。�
     
 如果对象的类位于某个类簇中，那么在使用内省时就要格外小心。你觉得创建的是某个类的实例，实际上创建的却是其某个子类的实例。
 
-#### Cocoa
+#### Cocoa里的类簇
+大部分collection都是类簇中的抽象基类。在使用NSArray的alloc方法来获取实例时，该方法首先会分配一个属于某类的实例。此实例充当“站位数组”（placeholder array）。该数组稍后会转为另一个类的实例，而那个类则是NSArray的实体子类。
+
+    id maybeAnArray = @[@1, @2];
+    if ([maybeAnArray class] == [NSArray class]) {
+      // will never be hit
+    }
+    
+`[maybeAnArray class]`所返回的类绝对不可能是NSArray，因为由NSArray的初始化方法所返回的那个实例其类型是隐藏在类簇公共接口(public facede)后面的某个内部类型(internal type)。  
+判断某对象是否属于某个类簇中，不要直接检测两个“类对象”是否等同，而应该采用下列代码：
+
+    id maybeAnArray = @[@1, @2];
+    if ([maybeAnArray isKindOfClass:[NSArray class]]) {
+      // will be hit
+    }
+    
+### 第10条：在既有类中使用关联对象存放自定义数据
+对象关联类型
+
+关联类型 | 等效的@property属性
+------------ | ------------- 
+OBJC_ASSOCIATION_ASSIGN | assign 
+OBJC_ASSOCIATION_RETAIN_NONATOMIC | nonatomic, retain
+OBJC_ASSOCIATION_COPY_NONATOMIC | nonatomic, copy
+OBJC_ASSOCIATION_RETAIN | retain
+OBJC_ASSOCIATION_COPY | copy
+
+`void objc_setAssociatedObject(id object, void* key, id value, objc_AssociationPolicy policy)` 此方法以给定的键和策略为某对象设置关联对象值。  
+`id objc_getAssociatedObject(id object, void* key)` 此方法根据给定的键从某对象中获取相应的关联对象值。  
+`void objc_removeAssociatedObject(id object)` 此方法移除指定对象的全部关联对象。
+
+通常使用静态全局变量做键。
+
+### 第11条：理解objc_msgSend的作用
+在对象上调用方法是Objective-C中经常使用的功能。用OC的术语来说，这叫做“传递消息”（pass a message）。消息有“名称”（name）或“选择子”（selector），可以接受参数，而且可能还有返回值。  
+C语言使用“静态绑定”（static binding），也就是说，在编译期就能决定运行时所应调用的函数。
+
+    #include <stdio.h>
+    
+    void printHello() {
+      printf("Hello world\n");
+    }
+    
+    void printGoodbye() {
+      printf("Goodbye, world!");
+    }
+    
+    void doTheThing(int type) {
+      if (type == 0) {
+        printHello();
+      } else {
+        printGoodbye();
+      }
+    }
+编译器在编译代码的时候就已经知道程序中有`printHello`和`printGoodbye`这两个函数了，所以会直接生成调用这些函数的指令。而函数地址实际上是硬编码在指令中的。
+
+    #include <stdio.h>
+    
+    void printHello() {
+      printf("Hello world\n");
+    }
+    
+    void printGoodbye() {
+      printf("Goodbye, world!");
+    }
+    
+    void doTheThing(int type) {
+      void (*fnc)();
+      if (type == 0) {
+        fnc = printHello();
+      } else {
+        fnc = printGoodbye();
+      }
+      fnc();
+    }
+所要调用的函数直到运行期才能确定。只有一个函数调用指令，不过待调用的函数地址无法硬编码在指令之中，而是要在运行期读取出来。
