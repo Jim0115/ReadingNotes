@@ -352,3 +352,16 @@ Boolean类型只有两个字面值，true和false。不能保证true等于1，fa
 函数参数由包含0到多个值的数组表示的，所以函数没有签名，无法实现函数重载。  
 如果定义了两个名字相同的函数，则后定义的函数覆盖原先定义的函数。
 
+## 第四章：变量、作用域和内存问题
+#### 传递参数
+Javascript中所有参数的传递都是值类型。也就是，函数内参数是对传递参数的复制。所以，在函数内部对参数进行的任何操作对外部的变量都是没有影响的。
+
+    function changeName(p) {
+      p.name = "Hi";
+    }
+    
+    var person = new Object();
+    
+    changeName(person);
+    
+    alert(person.name); // Hi
