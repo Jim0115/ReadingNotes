@@ -205,3 +205,12 @@ Swift:
         }
       }
     }
+    
+### Lock
+    func myMethod(obj: AnyObject!) {
+      objc_sync_enter(obj)
+      
+      // do sth with `obj` here
+          
+      objc_sync_exit(obj)
+    }
