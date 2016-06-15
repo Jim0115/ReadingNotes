@@ -448,4 +448,29 @@ C语言使用“静态绑定”（static binding），也就是说，在编译�
 
     + (BOOL)resolveInstanceMethod:(SEL)selector
 该方法的参数就是那个未知的选择子，其返回值为Boolean类型，表示这个类能否新增一个实例方法用以处理此选择子。在继续往下执行转发机制之前，本类有机会新增一个处理此选择子的方法。加入尚未实现的方法是类方法，调用`resolveClassMethod:`。  
-使用这种办法的前提是：相关方法的实现代码已经写好，只等着运行时插入类中即可。此方案常用来实现`@dynamic`属性
+使用这种办法的前提是：相关方法的实现代码已经写好，只等着运行时插入类中即可。此方案常用来实现`@dynamic`属性。比如说，要访问Core Data框架中NSManagedObjects对象的属性时就可以这么做，因为实现这些属性所需的存取方法在编译期就能确定。  
+
+    id autoDictionaryGetter(id self, SEL _cmd);
+    void autoDictionarySetter(id self, SEL _cmd, id value);
+    
+    + (BOOL)resolveInstanceMethod:(SEL)sel {
+      NSString* selectorString = NSStringFromSelector(sel);
+      if ( /* selector is from a @dynamic property */ ) {
+        if ([selectorString hasPrefix:@"set"]) {
+          class_addMethod(self, sel, (IMP)autoDictionaryGetter, "v@:@");
+        } else {
+          class_addMethod(self, sel, (IMP)autoDictionaryGetter, "@@:");
+        }
+        return YES;
+      }
+      return [super resolveInstanceMethod:sel];
+    }
+
+#### 备援接收者
+当前接收者还有第二次机会能处理未知的选择子，在这一步中，运行期系统会问它：能不能把这条消息转给其他接收者来处理。
+
+    - (id)forwardingTargetForSelector:(SEL)selector
+方法参数表示未知的选择子，若当前接收者能找到备援对象，则将其返回，若找不到，就返回nil。通过此方案，我们可以用组合(composition)来模拟出“多重继承”（multiple inheritance）的某些特性。在一个对象内部，可能还有一系列对象，该对象可经由此方法将能够处理某选择子的相关内部变量返回，这样的话，在外界看来，好像是该对象亲自处理了这些消息似的。
+
+#### 完整的消息转发
+如果转发算法已经来到这一步的话，那么唯一能做的就是启用完整的消息转发机制了。首先创建NSInvocation对象，把尚未处理的那条消息有关的全部细节都封于其中。此对象包含选择子、目标（target）及参数。在触发NSInvocation对象时，“消息派发系统”（message-dispatch system）将亲自出马，把消息指派给目标对象
