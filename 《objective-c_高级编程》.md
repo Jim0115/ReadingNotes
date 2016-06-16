@@ -137,3 +137,46 @@ Example: 在数据库的读写中，需要串行执行写操作，同时并行�
 设置`operation.completionBlock`，`completionBlock`将在operation执行完毕后执行，但并不在operation所在的队列中。
 > The exact execution context for your completion block is not guaranteed but is typically a secondary thread. Therefore, you should not use this block to do any work that requires a very specific execution context.
 
+
+
+## Swift 3.0 beta new API
+### QOS 优先级 (priority)
+1. DispatchQueue.GlobalAttributes.qosUserInteractive
+2. DispatchQueue.GlobalAttributes.qosUserInitiated
+3. DispatchQueue.GlobalAttributes.qosUtility
+4. DispatchQueue.GlobalAttributes.qosBackground
+
+### 创建队列
+    DispatchQueue(label: String, attributes: DispatchQueueAttributes, target: DispatchQueue?)
+
+    // main queue
+    DispatchQueue.main
+    
+    // global queue
+    DispatchQueue.global(attributes: DispatchQueue.GlobalAttributes.qosUserInteractive)
+    // 可以传递多个参数，但选用优先级最高的
+
+### 同步异步
+    let queue = DispatchQueue.global(attributes: DispatchQueue.GlobalAttributes.qosUserInteractive)
+    queue.async(execute: () -> Void)
+    queue.async(execute: DispatchWorkItem)
+    
+### DispatchWorkItem
+是对具体任务的一个封装  
+`init(group: DispatchGroup, qos: DispatchQoS, flags: DispatchWorkItemFlags, block: @convention(block) () -> ())`
+    
+### dispatch_after
+    DispatchQueue.main.after(when: DispatchTime, execute: () -> Void)
+    
+    DispatchTime.now()
+    DispatchTime.distantFuture
+    
+### dispatch_async
+    DispatchQueue.main.async(group: DispatchGroup?, qos: DispatchQoS, flags: DispatchWorkItemFlags, execute: () -> ())
+    
+### dispatch_barrier_async
+async的flag属性中设置`barrier`
+
+### dispatch_apply
+    DispatchQueue.concurrentPerform(iterations: Int, execute: (Int) -> Void)
+参数中不再包含执行队列，猜测是追加到当前队列
