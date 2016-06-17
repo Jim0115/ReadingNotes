@@ -505,4 +505,14 @@ C语言使用“静态绑定”（static binding），也就是说，在编译�
       }
       return YES;
     }
-首次在`EOCAutoDictionary`实例上访问某个属性时，运行期系统还找不到对应的选择子，因为所需的选择子既没有直接实现，又没有自动合成。假设现在要写入`opaqueObject`属性，系统就会以`setOpaqueObject:`为选择子调用上面的方法。同理，在读取该属性时，系统也会以`opaqueObject`为选择子调用上述方法。
+首次在`EOCAutoDictionary`实例上访问某个属性时，运行期系统还找不到对应的选择子，因为所需的选择子既没有直接实现，又没有自动合成。假设现在要写入`opaqueObject`属性，系统就会以`setOpaqueObject:`为选择子调用上面的方法。同理，在读取该属性时，系统也会以`opaqueObject`为选择子调用上述方法。无论读写方法，都会调用`class_addMethod`方法向类中动态添加方法。第三个参数为函数指针，指向待添加的方法。最有一个参数则为函数的“类型编码”。  
+在使用点语法进行读写时(`dict.object = @"some string";`)，传入的读写方法分别为`object`和`setObject:`，而在使用`setValue:forKey:`和`valueForKey:`方法时(`[dict setValue:@"some string" forKey:@"key"];`)，传入的读写方法分别为`getKey`和`setKey:`。二者在读取
+
+    id autoDictionaryGetter(id self, SEL _cmd) {
+      EOCAutoDictionary* typedSelf = (EOCAutoDictionary *)self;
+      NSMutableDictionary* backingStore = typedSelf.backingStore;
+      
+      NSString* key = NSStringFromSelector(_cmd);
+      
+      return backingStore[key];
+    }
