@@ -447,7 +447,7 @@ C语言使用“静态绑定”（static binding），也就是说，在编译�
 对象在收到无法解读的消息后，首先将调用其所属类的下列类方法：
 
     + (BOOL)resolveInstanceMethod:(SEL)selector
-该方法的参数就是那个未知的选择子，其返回值为Boolean类型，表示这个类能否新增一个实例方法用以处理此选择子。在继续往下执行转发机制之前，本类有机会新增一个处理此选择子的方法。加入尚未实现的方法是类方法，调用`resolveClassMethod:`。  
+该方法的参数就是那个未知的选择子，其返回值为Boolean类型，表示这个类能否新增一个实例方法用以处理此选择子。在继续往下执行转发机制之前，本类有机会新增一个处理此选择子的方法。如果要加入尚未实现的方法是类方法，调用`resolveClassMethod:`。  
 使用这种办法的前提是：相关方法的实现代码已经写好，只等着运行时插入类中即可。此方案常用来实现`@dynamic`属性。比如说，要访问Core Data框架中NSManagedObjects对象的属性时就可以这么做，因为实现这些属性所需的存取方法在编译期就能确定。  
 
     id autoDictionaryGetter(id self, SEL _cmd);
@@ -483,3 +483,26 @@ C语言使用“静态绑定”（static binding），也就是说，在编译�
 步骤越往后，处理消息的代价就越大。最好能在第一步就处理完，这样的话，运行期系统就可以将此方法缓存起来。如果这个类的实例稍后收到同名选择子，那么根本无须启动消息转发。若想在第三步里把消息转给备援的接收者，那还不如把转发操作提前到第二步。因为第三步只是修改了调用目标，这项改动放在第二步执行会更简单，不然，还得创建并处理完整的NSInvocation。
 
 #### 动态解析的完整例子
+代码见`EOCAutoDictionary`  
+
+`@dynamic string, number, date, opaqueObject;`  
+将属性设置为`@dynamic`，编译器不会自动合成实例变量和生成存储方法。  
+重写父类的`resolveInstanceMethod:`方法：
+
+    + (BOOL)resolveInstanceMethod:(SEL)sel {
+      NSString* selectorString = NSStringFromSelector(sel);
+      
+      if ([selectorString hasPrefix:@"set"]) {
+        class_addMethod(self,
+                        sel,
+                        (IMP)autoDictionarySetter,
+                        "v@:@");
+      } else {
+        class_addMethod(self,
+                        sel,
+                        (IMP)autoDictionaryGetter,
+                        "@@:");
+      }
+      return YES;
+    }
+首次在`EOCAutoDictionary`实例上访问某个属性时，运行期系统还找不到对应的选择子，因为所需的选择子既没有直接实现，又没有自动合成。假设现在要写入`opaqueObject`属性，系统就会以`setOpaqueObject:`为选择子调用上面的方法。同理，在读取该属性时，系统也会以`opaqueObject`为选择子调用上述方法。
