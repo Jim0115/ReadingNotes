@@ -534,3 +534,15 @@ C语言使用“静态绑定”（static binding），也就是说，在编译�
 
     NSLog(@"%@", [(NSString *)dict uppercaseString]); // SOME STRING
     NSLog(@"%@", [(NSArray *)dict firstObject]); // 1
+    
+### 第13条：用“方法调配技术”调试“黑盒方法”
+    Method lower = class_getInstanceMethod([NSString class], @selector(lowercaseString));
+    Method upper = class_getInstanceMethod([NSString class], @selector(uppercaseString));
+    
+    method_exchangeImplementations(lower, upper);
+    
+    NSString* str = @"Aloha";
+    
+    NSLog(@"%@ %@", [str lowercaseString], [str uppercaseString]); // ALOHA aloha
+    
+使用`method_exchangeImplementations`方法可以交换两个方法的实现，不过通常不会交换已经写好的两个方法，因为这些方法已经实现的很好了，没有交换的必要了。通常的做法是通过这一手段为已有的方法实现添加新功能。比如说，想要在调用`lowercaseString`方法时记录某些信息，就可以通过交换实现。
