@@ -546,3 +546,24 @@ C语言使用“静态绑定”（static binding），也就是说，在编译�
     NSLog(@"%@ %@", [str lowercaseString], [str uppercaseString]); // ALOHA aloha
     
 使用`method_exchangeImplementations`方法可以交换两个方法的实现，不过通常不会交换已经写好的两个方法，因为这些方法已经实现的很好了，没有交换的必要了。通常的做法是通过这一手段为已有的方法实现添加新功能。比如说，想要在调用`lowercaseString`方法时记录某些信息，就可以通过交换实现。
+使用类簇向类中添加方法：
+
+    @implementation NSString (lowercaseStringWithNotification)
+    
+    - (NSString *)lowercaseStringWithNotification {
+      NSString* lower = [self lowercaseStringWithNotification];
+      NSLog(@"%@ -> %@", self, lower);
+      return lower;
+    }
+    
+    @end
+这种方法看似会陷入递归调用的无限循环，但在运行时已经将此方法与`lowercaseString`方法进行互换，实际调用的是`lowercaseString`的方法实现。
+
+    Method lower = class_getInstanceMethod([NSString class], @selector(lowercaseString));
+    Method lowerNoti = class_getInstanceMethod([NSString class], @selector(lowercaseStringWithNotification));
+    
+    method_exchangeImplementations(lower, lowerNoti);
+    
+通过此方法，开发者可以为那些“完全不知道具体实现”（completely opaque， 完全不透明）的黑盒方法增加日志记录功能，这将非常有助于程序调试。但是，很少有人在调试之外的场合使用此方法。不能仅仅因为OC中有这个特性就去使用它，如果滥用反而会使得代码难以读懂和维护。
+
+### 第14条：理解“类对象”的用意
