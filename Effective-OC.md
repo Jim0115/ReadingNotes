@@ -567,3 +567,43 @@ C语言使用“静态绑定”（static binding），也就是说，在编译�
 通过此方法，开发者可以为那些“完全不知道具体实现”（completely opaque， 完全不透明）的黑盒方法增加日志记录功能，这将非常有助于程序调试。但是，很少有人在调试之外的场合使用此方法。不能仅仅因为OC中有这个特性就去使用它，如果滥用反而会使得代码难以读懂和维护。
 
 ### 第14条：理解“类对象”的用意
+Objective-C实际上是一门极其动态的语言。第11条讲解了运行期系统如何查找并调用某方法的实现代码，第12条则讲述了消息转发的原理：如果类无法立即响应某个选择子，那么就会启动消息转发流程。然而，消息的接收者究竟是何物？对象类型并非在编译期就绑定好了，而是要在运行期查找。而且，还有个特殊的类型叫做id，它能指代任意的OC**对象类型**。一般情况下，应该指明消息接收者的具体类型，这样的话，如果向其发送了无法解读的消息，那么编译器就会产生警告。而类型为id的对象会被编译器假定它能相应所有消息。  
+编译器无法确定某类型对象到底能解读多少种选择子，因为运行期还可以向其中动态新增。然而，即便使用了动态新增技术，编译器也觉得应该能在某个头文件找到方法原型的定义，据此可了解完整的“方法签名”（method signature），并生成派发消息所需的正确代码。  
+“在运行期检视对象类型”这一操作也叫做“类型信息查询”（introspection，“内省”），这个强大而有用的特性内置于`Foundation`框架的`NSObject`协议里，凡是由公共根类（common root class
+，即`NSObject`和`NSProxy`）继承来的对象都要遵从此协议。在程序中不要直接比较对象所属的类，明智的做法是使用“内省”。
+
+    struct objc_object {
+      Class isa;
+    };
+    typedef struct objc_object *id;
+每个对象结构体的首个成员是`Class`类的变量。该变量定义了对象所属的类，通常称为“is a”指针。例如，刚才的例子中所用的对象“是一个”（is a）NSString，所以其“isa”指针就指向`NSString`。`Class`对象也定义在运行期程序库的头文件中：
+
+    struct objc_class {
+      Class isa;
+      Class super_class;
+      const char* name;
+      long version;
+      long info;
+      long instance_size;
+      struct objc_ivar_list *ivars;
+      struct objc_method_list **methodLists;
+      struct objc_cache *cache;
+      struct objc_protocol_list *protocols;
+    };
+    typedef struct objc_class* Class;
+    
+此结构体存放类的“元数据”（metadata），例如类的实例实现了几个方法，具备多少个实例变量等信息。此结构体的首个变量也是isa指针，这说明Class本身也是OC对象。结构体里还有个变量叫做super_class，它定义了本类的父类。类对象所属的类型（也就是isa指针指向的类型）是另外一个类，叫做“元类”（metaclass），用来表述类对象本身所具备的元数据。**“类方法”就定义于此处，因为这些方法可以理解为类对象的实例方法。**
+每个类仅有一个类对象，而每个类对象仅有一个与之相关的元类。  
+![image](http://7xt1ag.com1.z0.glb.clouddn.com/Screen%20Shot%202016-06-20%20at%2015.10.38.png =600x)  
+`super_class`指针确立了继承关系，而`isa`指针描述了实例所属的类。通过这张布局图即可执行“类型信息查询”。我们可以查出对象能否相应某个选择子，是否遵从某项协议，并且能看出此对象位于“类继承体系”（class hierarchy）的哪一部分。
+
+#### 在类继承体系中查询类型信息
+使用内省检视类继承体系。`isMemberOfClass:`能够判断出对象是否为某个特定类的实例，而`isKindOfClass:`则能够判断出对象是否为某类或**其派生类**的实例。  
+
+    NSLog(@"%d", [dict isMemberOfClass:[NSDictionary class]]); // NO
+    NSLog(@"%d", [dict isMemberOfClass:[NSMutableDictionary class]]); // NO
+    NSLog(@"%d", [dict isKindOfClass:[NSDictionary class]]); // YES
+    NSLog(@"%d", [dict isKindOfClass:[NSArray class]]); // NO
+    
+像这样的类型信息查询方法是用`isa`指针获取对象所属的类，然后通过`super_class`指针在继承体系之间游走。由于对象是动态的，所以此特性显得极为重要。OC与其它语言不同，在此语言中，必须查询类型信息，方能完全了解对象的真实类型。  
+从collection中获取对象时，通常会查询类型信息，这些对象不是“强类型的”（strongly type），把它们从collection中取出来时，其类型通常是`id`。如果想知道具体类型，那就可以使用内省。
