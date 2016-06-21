@@ -660,3 +660,77 @@ OC没有其它语言那种内置的命名空间（namespace）机制。鉴于此
 * 便利初始化方法只能调用同类中的指定初始化方法或其他便利初始化方法进行初始化
 * 指定初始化要先调用父类的指定初始化方法，在初始化自身
 * 一个拥有指定初始化方法的类必须实现父类中的所有指定初始化方法
+
+### 第17条：实现`description`方法
+在打印自定义的对象时，系统会调用对象的`description`方法。如果没有重写该方法，则会调用`NSObject`类中的默认实现。这些实现没有打印出比较有用的内容，只是输出了类名和对象的内存地址。以一个代表个人信息的类为例，应该这样重写`description`方法：
+
+    - (NSString *)description {
+      return [NSString stringWithFormat:@"<%@: %p, \"%@ %@\">", [self class], self, _firstName, _lastName];
+    }
+一种简单的实现方法是借助`NSDictionary`类的`description`方法。以一个表示某地点名称和经纬度的类为例：
+
+    - (NSString *)description {
+      return [NSString stringWithFormat:@"<%@: %p, %@>",
+              [self class],
+              self,
+              @{
+                  @"title":_title,
+                  @"latitude":@(_latitude),
+                  @"longitude":@(_longitude) }
+              ];
+    }
+与`description`相对应，`debugDescription`当开发者在debugger中打印对象时才调用的。在`NSObject`的默认实现中，此方法返回`description`。通常会把类的属性放在`description`方法中返回，而在`debugDescription`中输出类名和指针地址这些额外信息。
+
+### 第18条：尽量使用不可变对象
+设计类的时候，应充分运用属性来封装数据。而在使用属性时，则可将其声明为“只读”(read-only)。默认情况下，属性是可以“读写”（read-write）的，这样设计出来的类都是可变的（mutable）。不过，一般情况下我们要建模的数据未必需要改变。  
+具体到实践中，应该尽量把对外公布出来的属性设为只读，而且只在确有必要时才将属性对外公布。  
+有时可能想修改封装在对象内部的数据，但是却不想令这些数据为外人所改动。这种情况下，通常做法是在对象内部将readonly属性重新声明为readwrite。即使是这样，在外部仍能通过KVC技术设置这些属性值。甚至可以直接使用内省查出实例变量在内存布局中的偏移量，以此来人为设置这个实例变量的值。  
+在定义公共API时，还需要注意类中的集合属性。如果在类中维护一个不可变collection，通常的做法是定义一个readonly的不可变collection属性，而在其内部维护一个可变类型的对应属性。get集合时返回内部可变集合的copy，增删方法则直接操作内部可变集合。  
+最后，不要在返回的对象上查询类型以确定其是否可变。有可能库的开发者没有将内部的可变set拷贝一份在返回，而是直接返回了可变的set。因为set可能很大，拷贝会十分耗时。在使用集合返回值时，要遵守和类之间的约定，对于返回值不应使用内省判断其是否为可变类型。
+
+### 第19条：使用清晰而协调的命名方式
+在其他语言中，倾向于省略不必要的描述符，如`Rectangle(5, 10)`，在这种命名方式下，想要知道每个函数的具体意义就得查看函数原型。而在OC中，通常会声明为这样：
+
+    - (instancetype)initWithWidth:(float)width andHeight:(float)height;
+这样做就不至于混淆参数的含义。
+
+### 第20条：为私有方法名加前缀
+编写类的实现代码时，经常要写一些只在内部使用的方法。建议应该给这种方法加上某些前缀，据此很容易能够区分开公共方法和私有方法。
+一个建议是使用`p_`作为私有方法的前缀，下划线后的部分按照常用的驼峰命名法即可，其首字母要小写。
+
+### 第21条：理解Objective-C错误模型
+ARC在默认情况下不是“异常安全的”（exception safe）。具体来说，这意味着：如果抛出异常，那么本应在作用域末尾释放的对象现在却不会自动释放了。OC现在才用的方法是：只有在极其罕见的情况下抛出异常，异常抛出后，无须考虑恢复问题，应用程序此时应该退出。  
+异常只用于处理致命错误(fatal error, 致命错误)，针对非致命错误，OC使用的编程范式是：令方法返回nil/0，或使用NSError表明其中有错误发生。  
+NSError的用法更加灵活，因为经由此对象，可以把导致错误的原因回报给调用者。NSError对象中封装了三条信息：  
+`Error domain`错误范围，类型为NSString  
+产生错误的根源，通常用一个特有的全局变量来定义。  
+`Error code`错误码，类型为NSInteger  
+独有的错误代码，用来指明在某个范围内具体发生了何种错误。  
+`User info`用户信息，类型为NSDictionary  
+有关此错误的额外信息，其中或许包含一段“本地化的描述”（localized description），或许还包含导致该错误发生的另外一个错误，经由此种消息，可将相关错误串成一条“错误链”（chain of errors）。
+
+#### NSError的两种常见用法
+第一种常见用法是通过委托协议来传递错误。比如在委托协议`NSURLConnectionDelegate`中酒定义了如下方法：
+
+    - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error;
+使用委托方法未必非得实现：是不是需要处理此错误，可交由`NSURLConnection`的用户去判断。这比抛出异常要好，因为调用者可以自己决定`NSURLConnection`是否回报此错误。  
+另一种常见用法是：通过方法的“输出参数”返回给调用者。如：
+
+    - (BOOL)doSomething:(NSError **)error;
+传递给方法的参数是个指针，而该指针本身又指向另一个指针，那个指针指向NSError对象。这样一来，此方法不仅能有普通的返回值，而且还能经由“输出参数”把NSError回传给调用者。在不想知道具体错误时，可以给error参数传入nil。  
+实际上，在使用ARC时，编译器会把方法签名中的`NSError **`转换成`NSError* __autoreleasing *`，也就是说，指针指向的对象会在方法执行完毕后自动释放。
+
+    - (BOOL)doSomething:(NSError**)error {
+      if (/* error happens */) {
+        if (error) {
+          *error = [NSError errorWithDoman:domain code:code userInfo:userInfo];
+        }
+        return NO;
+      } else {
+        return YES;
+      }
+    }
+使用`*error = [NSError errorWithDoman:domain code:code userInfo:userInfo];`之前要保证error不为nil。  
+NSError对象里的“错误范围”（domain），“错误码”（code），“用户信息”（userInfo）等部分应该按照具体情况填入适当内容。这样就可以根据错误类型分别处理各种错误。错误范围应该定义成NSString类型的全局变量，错误码应定义为枚举类型。
+
+### 第22条：理解`NSCoping`协议
