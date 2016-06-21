@@ -607,3 +607,56 @@ Objective-C实际上是一门极其动态的语言。第11条讲解了运行期�
     
 像这样的类型信息查询方法是用`isa`指针获取对象所属的类，然后通过`super_class`指针在继承体系之间游走。由于对象是动态的，所以此特性显得极为重要。OC与其它语言不同，在此语言中，必须查询类型信息，方能完全了解对象的真实类型。  
 从collection中获取对象时，通常会查询类型信息，这些对象不是“强类型的”（strongly type），把它们从collection中取出来时，其类型通常是`id`。如果想知道具体类型，那就可以使用内省。
+
+### 第15条：用前缀避免命名空间重复
+OC没有其它语言那种内置的命名空间（namespace）机制。鉴于此，在命名时要避免潜在的命名冲突，否则就很容易产生重名。如果发生命名冲突（naming clash），那么应用程序的链接过程就会出错，因为其中出现了重复符号。  
+避免此问题的唯一办法就是变相实现命名空间：为所有名称都加上适当前缀。
+
+### 第16条：提供“全能初始化方法”
+所有对象均要初始化。在初始化时，有些对象可能无须开发者向其提供额外信息，不过一般来说要是要提供的。通常情况下，对象若不知道必要的信息，则无法完成其工作。以`UITableViewCell`为例，初始化该对象时，需要指明样式及标识符，标识符能够区分不同类型的单元格。由于这种对象的创建成本较高，所以绘制表格时可以依照标识符来进行复用，以提升程序效率。把这种可为对象提供必要信息以便能完成工作的初始化方法叫做“全能初始化方法”（designated initializer，指定初始化方法）。  
+如果创建类实例的方法不止一种，那么这个类就会有多个初始化方法。要在其中选定一个作为全能初始化方法，令其他初始化方法都来调用它。以`NSDate`为例：
+
+    - (instancetype)init
+    - (instancetype)initWithTimeIntervalSinceNow:(NSTimeInterval)seconds
+    - (instancetype)initWithTimeInterval:(NSTimeInterval)seconds 
+                               sinceDate:(NSDate *)refDate
+    - (instancetype)initWithTimeIntervalSinceReferenceDate:(NSTimeInterval)seconds
+    - (instancetype)initWithTimeIntervalSince1970:(NSTimeInterval)seconds
+    
+`- init`和`- initWithTimeIntervalSinceReferenceDate:`是“指定初始化方法”。也就是说，其余的初始化方法都要调用它。于是，只有在指定初始化方法中，才会储存内部数据。这样的话，当底层数据存储机制改变时，只需要修改此方法的代码即可，无须改动其他初始化方法。
+
+    // Person.h
+    
+    @interface Person : NSObject
+
+    @property (nonatomic, copy) NSString* name;
+    @property (nonatomic, assign) NSUInteger age;
+    
+    - (instancetype)init;
+    - (instancetype)initWithName:(NSString *)name age:(NSUInteger)age NS_DESIGNATED_INITIALIZER;
+    
+    @end
+    
+    // Person.m
+    
+    @implementation Person
+
+    - (instancetype)init {
+      self = [self initWithName:@"" age:0];
+      return self;
+    }
+    
+    - (instancetype)initWithName:(NSString *)name age:(NSUInteger)age {
+      if (self = [super init]) {
+        _name = [name copy];
+        _age = age;
+      }
+      return self;
+    }
+    
+    @end
+使用指定初始化方法有以下原则：
+
+* 便利初始化方法只能调用同类中的指定初始化方法或其他便利初始化方法进行初始化
+* 指定初始化要先调用父类的指定初始化方法，在初始化自身
+* 一个拥有指定初始化方法的类必须实现父类中的所有指定初始化方法
