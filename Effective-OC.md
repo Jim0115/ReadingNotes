@@ -734,3 +734,41 @@ NSError的用法更加灵活，因为经由此对象，可以把导致错误的�
 NSError对象里的“错误范围”（domain），“错误码”（code），“用户信息”（userInfo）等部分应该按照具体情况填入适当内容。这样就可以根据错误类型分别处理各种错误。错误范围应该定义成NSString类型的全局变量，错误码应定义为枚举类型。
 
 ### 第22条：理解`NSCoping`协议
+使用对象时经常需要拷贝它。在OC中，此操作通过`copy`方法完成。如果想令自己的类支持拷贝操作，那就要实现`NSCopying`协议。该协议只有一个方法：
+
+    - (id)copyWithZone:(NSZone *)zone;
+以前开发程序时，会依据NSZone把内存分成不同的“区”（zone），而对象会创建在某个区里面。现在不用了，每个程序只有一个区：“默认区”（default zone）。Example：
+
+    // EOCPerson.h
+    
+    @interface EOCPerson : NSObject <NSCopying>
+    
+    @property (nonatomic, copy, readonly) NSString* firstName;
+    @property (nonatomic, copy, readonly) NSString* lastName;
+    
+    - (instancetype)initWithFirstName:(NSString *)firstName
+                             lastName:(NSString *)lastName;
+    
+    @end
+    
+    
+    // EOCPerson.m
+    
+    @implementation EOCPerson
+    
+    - (instancetype)initWithFirstName:(NSString *)firstName lastName:(NSString *)lastName {
+      if (self = [super init]) {
+        _firstName = [firstName copy];
+        _lastName = [lastName copy];
+      }
+      return self;
+    }
+    
+    - (id)copyWithZone:(NSZone *)zone {
+      return [[[self class] allocWithZone:zone] initWithFirstName:_firstName
+                                                         lastName:_lastName];
+    }
+    
+    @end
+在copy时处理内部集合：如果为可变集合，mutableCopy到新对象中。如果为不可变集合，可以无须复制。  
+`mutableCopy`与
