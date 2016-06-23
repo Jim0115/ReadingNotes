@@ -775,4 +775,44 @@ NSError对象里的“错误范围”（domain），“错误码”（code），
 
 ### 第23条：通过委托和数据源协议进行对象间通信
 对象之间经常需要进行通信，而通信方式有很多种。OC广泛使用的是一种名叫“委托模式”（Delegate pattern）的编程设计模式来实现对象间的通信，该模式的主旨是：定义一套接口，若对象想接受另一个对象的委托，则需遵从此接口，以便成为其“委托对象”（delegate）。而这“另一个对象”则可以给委托对象回传一些消息，也可以在发生相关事件时通知委托对象。  
-“数据源”（data source）模式用于将数据和业务逻辑解耦
+“数据源”（data source）模式用于将数据和业务逻辑解耦。比方说，用户界面里有个显示一系列数据所用的视图，那么，此视图只应包含显示数据所需的逻辑代码，而不应该决定要先输何种数据以及数据之间如何交互。视图对象的属性中，可以包含负责数据和事件处理的对象。这两种对象分别称为“数据源”（data source）和“委托”（delegate）。  
+在OC中，一般通过“协议”来实现此模式，整个Cocoa系统框架都是这么做的。  
+假设要编写一个从网上获取数据的类。此类也许要从远程服务器的某个资源里获取数据。那个远程服务器可能过很长时间才会应答，而在获取数据的过程中阻塞应用程序则是一种非常糟糕的做法。于是，在这种情况下，我们通常会使用委托模式：获取网络请求的类含有一个“委托对象”，在获取完数据之后，它会回调这个委托对象。  
+![image](http://7xt1ag.com1.z0.glb.clouddn.com/Screen%20Shot%202016-06-23%20at%2009.12.04.png =600x)  
+协议可以这样来定义：
+
+    @protocol EOCNetworkFetcherDelegate
+    - (void)networkFetcher:(EOCNetworkFetcher *)fetcher
+            didReceiveData:(NSData *)data;
+    - (void)networkFetcher:(EOCNetworkFetcher *)fetcher
+          didFailWithError:(NSError *)error;
+    @end
+    
+有了这个协议后，类就可以用一个属性来存放其委托对象了。  
+    
+    @interface EOCNetworkFetcher : NSObject
+    @property (nonatomic, weak) id<EOCNetworkFetcherDelegate> delegate;
+    @end
+    
+要注意，这个属性需定义成weak，而非strong，因为两者之间必须为“非拥有关系”(nonowning relationship)。通常情况下，扮演delegate的那个对象也要持有本对象。例如在本例中，想使用`EOCNetworkFetcher`的那个对象就会持有本对象，直到用完本对象之后，才会释放。加入声明属性的时候用strong将本对象与委托对象之间定为“拥有关系”，那么就会引入“保留环”（retain cycle）。因此，本类中存放委托对象的这个属性要么定义成`weak`，要么定义成`unsafe_unretained`。  
+实现委托对象的方法是声明某个类遵从委托协议，然后把协议中想实现的那些方法在类里实现出来。某类若要遵从委托协议，可以在其接口中声明，也可在`class-continuation`分类中声明。通常委托协议只会在类的内部使用，所以这种情况一般都是在`class-continuation`分类中声明的。  
+委托协议中的方法一般都是“可选的”（optional），因为扮演“受委托者”角色的这个对象未必关心其中所有方法。在本例中，`DataModel`类可能并不关心获取数据的过程中是否有错误发生，所以此类不会实现`networkFetcher:didFailWithError:`方法。为了指明可选方法，委托协议经常使用`@optional`关键字来标注其中大部分或全部的方法。  
+
+    @protocol EOCNetworkFetcherDelegate
+    - (void)networkFetcher:(EOCNetworkFetcher *)fetcher
+            didReceiveData:(NSData *)data;
+    - (void)networkFetcher:(EOCNetworkFetcher *)fetcher
+          didFailWithError:(NSError *)error;
+    @end
+如果要在委托对象上调用可选方法，那么必须提前使用内省判断委托对象能否响应相关选择子：  
+
+    NSData* data = /* data from network */;
+    if ([_delegate respondsToSelector:@selector(networkFetcher:didReceiveData:)]) {
+      [_delegate networkFetch:self didReceiveData:data];
+    }
+delegate中的方法也可以用于从获取委托对象中获取信息。比方说，`EOCNetworkFetcher`类也许想提供一种机制：在获取数据时如果遇到了“重定向”（redirect），那么将询问其委托对象是否应该发生重定向，delegate中的相关方法可以写成这样：
+
+    - (BOOL)networkFetcher:(EOCNetworkFetcher *)fetcher      
+        shouldFollerRedirectToURL:(NSURL *)url;
+也可以用协议定义一套接口，令某类经由该接口获取其所需的数据。委托模式的这一用法旨在向类提供数据，故而又称为“数据源模式”（Data Source Pattern）。在此模式中，信息从data source流向class，而在常规的委托模式中，信息则从class流向delegate。  
+很容易用代码查出某个委托对象是否能响应特定的选择子，可是如果频繁执行此操作的话，那么除了第一次检测的结果有用之外，后续的检测可能都是多余的。如果委托对象本身没变，那么不太可能会突然响应某个原来不能响应的选择子，也不会突然无法响应某个原来可以响应的选择子。鉴于此，我们通常把委托对象能否响应某个协议方法这一信息缓存起来，以优化程序效率。假设在“网络数据获取器”那个例子中，delegate对象所遵从的协议里又个方法表示数据获取进度的回调方法，每当数据获取有进度时，委托对象就会得到通知。
