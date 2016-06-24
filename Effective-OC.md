@@ -816,3 +816,41 @@ delegate中的方法也可以用于从获取委托对象中获取信息。比方
         shouldFollerRedirectToURL:(NSURL *)url;
 也可以用协议定义一套接口，令某类经由该接口获取其所需的数据。委托模式的这一用法旨在向类提供数据，故而又称为“数据源模式”（Data Source Pattern）。在此模式中，信息从data source流向class，而在常规的委托模式中，信息则从class流向delegate。  
 很容易用代码查出某个委托对象是否能响应特定的选择子，可是如果频繁执行此操作的话，那么除了第一次检测的结果有用之外，后续的检测可能都是多余的。如果委托对象本身没变，那么不太可能会突然响应某个原来不能响应的选择子，也不会突然无法响应某个原来可以响应的选择子。鉴于此，我们通常把委托对象能否响应某个协议方法这一信息缓存起来，以优化程序效率。假设在“网络数据获取器”那个例子中，delegate对象所遵从的协议里又个方法表示数据获取进度的回调方法，每当数据获取有进度时，委托对象就会得到通知。
+
+### 第24条：将类的实现代码分散到便于管理的数个分类之中
+类中经常容易填满各种方法，而这些方法的代码则全部堆在一个巨大的实现文件中。有时这么做是合理的，因为即使通过重构把这个类打散，效果也不会更好。在此情况下，可以通过OC的“分类”机制，把类代码按逻辑划到几个分区中，这对开发和调试都有好处。
+
+    @interface EOCPerson : NSObject
+    
+    @property (nonatomic, copy, readonly) NSString* firstName;
+    @property (nonatomic, copy, readonly) NSString* lastName;
+    @property (nonatomic, readonly, copy) NSArray* friends;
+    
+    - (instancetype)initWithFirstName:(NSString *)firstName
+                          andLastName:(NSString *)lastName;
+    
+    @end
+    
+    @interface EOCPerson (Friendship)
+    
+    - (void)addFriend:(EOCPerson *)person;
+    - (void)removeFriend:(EOCPerson *)person;
+    - (BOOL)isFriendsWith:(EOCPerson *)person;
+    
+    @end
+    
+    @interface EOCPerson (Work)
+    
+    - (void)performDaysWork;
+    - (void)takeVacationFromWork;
+    
+    @end
+    
+    @interface EOCPerson (Play)
+    
+    - (void)goToTheCinema;
+    - (void)goToSportsGame;
+    
+    @end
+    
+使用分类机制后，依然可以把整个类都定义在一个接口文件中，并将其代码写在一个实现文件中。可是，随着分类数量增加，当前这份实现文件很快就膨胀的无法管理了。此时可以把每个分类提取到各自文件中。
