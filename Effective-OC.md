@@ -904,4 +904,16 @@ delegate中的方法也可以用于从获取委托对象中获取信息。比方
     // Methods here
     @end
     
-为什么需要这种分类呢？因为其中可以定义方法和实例变量。为什么能在其中定义方法和实例变量呢？只因有“稳固的ABI”这一机制，使得我们无需知道对象大小即可使用它。
+为什么需要这种分类呢？因为其中可以定义方法和实例变量。为什么能在其中定义方法和实例变量呢？只因有“稳固的ABI”这一机制，使得我们无需知道对象大小即可使用它。由于类的使用者不一定需要知道实例变量的内存布局，所以，它们也就未必要定义在公共接口中了。基于上述原因，我们可以像在类的实现文件里那样，在“class-continuation分类”中给类新增实例变量。只需在适当位置多写几个括号，然后把实例变量放进去：
+
+    @interface EOCPerson () {
+      NSString* _anInstanceVariable;
+    }
+    // Method declarations here
+    @end
+    
+    @implementation EOCPerson {
+      int _anotherInstanceVariable;
+    }
+    // Method implementations here
+    @end
