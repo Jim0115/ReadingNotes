@@ -917,3 +917,31 @@ delegate中的方法也可以用于从获取委托对象中获取信息。比方
     }
     // Method implementations here
     @end
+    
+### 第28条：通过协议提供匿名对象
+协议定义了一系列方法，遵从此协议对对象应该实现它们（不是可选的方法一定要实现）。于是，我们可以用协议把自己所写的API之中的实现细节隐藏起来，将返回的对象设计为遵从此协议的纯id类型。这样的话，想要隐藏的类名就不会出现在API之中了。若是接口背后有多个不同的实现类，而你又不想指明具体使用哪个类，那么可以考虑用这个方法，因为有时候这些类可能会变，有时候它们又无法容纳于标准的类继承体系中，因而不能以某个公共父类来统一表示。  
+此概念精彩成为“匿名对象”（anonymous object），这与其它语言中的“匿名对象”不同，在那些语言中，该词是指以内联形式所创造出的匿名类。在定义delegate属性时，可以这样写：
+
+    @property (nonatomic, weak) id<EOCDelegate> delegate;
+由于该属性的类型是`id<EOCDelegate>`，所以实际上任何类的对象都能充当这一属性，即使该类不继承自`NSObject`也可以，只要遵循`EOCDelegate`协议就行。  
+`NSDictionary`也能实际说明这一概念。在字典中，键的标准内存管理语义是“设置时拷贝”，而值的语义则是“设置时保留”。因此，在可变版本的字典中，设置键值对所用的方法的签名是：
+
+    - (void)setObject:(id)object forKey:(id<NSCopying>)key;
+表示键的那个参数其类型为`id<NSCopying>`，作为参数值的对象，它可以是任何类型，只要遵从`NSCoping`协议就好，这样的话，就可以向该对象发送拷贝消息了。这个`key`参数可以视为匿名对象。  
+处理数据库连接（database connection）的程序库也用这个思路，以匿名对象来表示从另一个库中所返回的对象。用以处理连接所用的那个类，你也许不想让人知道其名字，因为不同的数据库可能要用不同的类来处理。如果没办法令其都继承自同一父类，那么就得返回id类型的东西了。不过我们可以把所有数据库连接都具备的那些方法放到协议中，令返回的对象遵从此协议。协议可以这样写：
+
+    @protocol EOCDatabaseConnection
+    - (void)connect;
+    - (void)disconnect;
+    - (void)isConnected;
+    - (NSArray *)performQuery:(NSString *)query
+    @end
+    
+然后，就可以用“数据库处理器”（database handler）单例来提供数据库连接了。这个单例的接口可以写成：
+
+    @protocol EOCDatabaseConnection;
+    
+    @interface EOCDatabaseManager : NSObject
+      + (instancetype)sharedInstance;
+      - (id<EOCDatabaseConnection>)connectionWithIdentifier:(NSString *)identifier;
+    @end
