@@ -76,7 +76,7 @@ OC使用引用计数来管理内存，也就是说，每个对象都有个可以
     }
     
 此代码有内存泄漏问题，因为if语句末尾并未释放`message`对象。由于在if语句之外无法引用`message`，所以此对象所占的内存泄漏（没有正确释放已经不再使用的内存）了。判定内存是否泄漏所用的规则很简单：调用`NSString`的`alloc`方法所返回的那个`message`对象的保留计数比期望值要多1。然而却没有与之对应的释放操作来抵消。  
-自动引用计数所做的事情与其名称相符，就是自动管理引用计数。ARC将自动把代码改写为下列形势：
+自动引用计数所做的事情与其名称相符，就是自动管理引用计数。ARC将自动把代码改写为下列形式：
 
     if ([self shouldLogMsg]) {
       NSString* message = [[NSString alloc] initWithFormat:@"I am object, %p", self];
@@ -84,3 +84,43 @@ OC使用引用计数来管理内存，也就是说，每个对象都有个可以
       [message release];  ///< Added by ARC
     }
     
+使用ARC时要注意，引用计数实际上还是要执行的，只不过保留和释放操作现在由ARC自动添加。  
+实际上，ARC在调用这些方法时，并不会通过普通的OC消息派发机制，而是直接调用其C语言版本。这样做性能更好，因为保留和释放需要频繁执行，所以直接调用底层函数能节省很多CPU周期。比如说，ARC会调用于`retain`等价的底层函数`objc_retain`。
+
+#### 使用ARC中必须遵循的方法命名规则
+将内存管理语义在方法名中表示出来已经成为OC的惯例，而ARC将之确立为硬性规定。这些规则简单地体现在方法名上。若方法名以下列词语开头，则其返回的对象归调用者所有：
+
+* alloc
+* new
+* copy
+* mutableCopy
+
+归调用者的意思是：调用上述四种方法的那段代码要负责释放方法所返回的对象。也就是说，这些对象的保留计数是正值，而调用了这四种方法的那段代码要将其中一次保留操作抵消掉。  
+若方法名不以上述一个词语开头，则表示其返回的对象并不归调用者所有。在这种情况下，返回的对象会自动释放，所以其值在跨越方法调用边界后依然有效。要想使对象多存活一段时间，必须令调用者保留它才行。  
+维系这些规则所需的全部内存管理事宜均由ARC自动处理，其中也包括在将要返回的对象上调用`autorelease`
+
+    + (EOCPerson *)newPerson {
+      EOCPerson* person = [[EOCPerson alloc] init];
+      return person;
+      // new开头 不会被释放
+    }
+    
+    + (EOCPerson *)somePerson {
+      EOCPerson* person = [[EOCPerson alloc] init];
+      return person;
+      // 自动将返回改写为 return [person autorelease];
+    }
+    
+    - (void)doSomething {
+      EOCPerson* personOne = [EOCPerson newPerson];
+      // ...
+      
+      EOCPerson* personTwo = [EOCPerson somePerson];
+      // ...
+      
+      // personOne 由当前block持有
+      // personOne 不由当前block持有
+      // ARC 会自动添加 [personOne release];
+    }
+    
+除了会自动调用`retain`和`release`方法外，使用ARC还有其他好处，它可以执行一些手工操作很难甚至无法完成的优化。例如，在编译期，ARC会把能够相互抵消的`retain、release、autorelease`操作约简。如果发现在同一个对象上多次执行了`retain、release`操作，那么ARC又是可以成对移除这两个操作。  
