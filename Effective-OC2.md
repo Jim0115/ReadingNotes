@@ -45,3 +45,42 @@ OC使用引用计数来管理内存，也就是说，每个对象都有个可以
       NSString* str = [[NSString alloc] initWithFormat:@"I an this: %@", self];
       return str;    
     }
+此时返回的`str`对象其保留计数比期望值要多1，因为调用alloc会令保留计数加1，而又没有与之对应的释放操作。保留计数多1，就意味着调用者要负责处理多出来的这一次保留操作。必须设法将其抵消。这并不是说保留计数本身一定为1，它可能大于1，不过那取决于`initWithFormat:`方法内的实现细节。你要考虑的是如何将这一次的保留操作抵消掉。  
+但是，不能在方法内释放`str`，否则还没等方法返回，系统就把该对象回收了。这里应该使用`autorelease`，它会在稍后释放对象，从而给调用者留下了足够长的时间，使其可以在需要时保留返回值。换句话说，此方法可以保证对象在跨越“方法调用边界”（method call boundary）后一定存活。实际上，释放操作会在清空最外层的自动释放池（参见第34条）时执行，除非你有自己的释放池，否则这个时机指的就是当前线程的下一次事件循环。
+
+    - (NSString *)stringValue {
+      NSString* str = [[NSString alloc] initWithFormat:@"I an this: %@", self];
+      return [str autorelease];    
+    }
+修改之后，返回的`NSString`对象必然存活，所以能够像下面这样使用它：
+
+    NSString* str = [self stringValue];
+    NSLog(@"The string is: %@", str);
+    
+由于返回的`str`对象将于稍后自动释放，所以多出来的那一次保留操作到时自然就会抵消，无须在执行内存管理操作。因为自动释放池中的释放操作等到下一次事件循环才会执行，所以`NSLog`语句在使用`str`对象前不需要手动执行保留操作。但是，假如要持有此对象的话（比如将其设置为实例变量），那就需要保留，并在稍后释放：
+
+    _instanceVariable = [[self stringValue] retain];
+    // ...
+    [_instanceVariable release];
+    
+#### 保留环
+使用引用计数机制时，经常需要注意的问题就是“保留环”（retain cycle），也就是成环状相互引用的多个对象。这将导致内存泄漏，因为循环中的对象引用计数永远不会降为0。对于循环中的每个对象，都有循环中的另一个对象引用着它。  
+在GC环境中，这种情况通常被认定为“孤岛”（island of isolation）。此时，垃圾收集器会把三个对象全部回收走。而在引用计数架构下，通常使用“弱引用”（weak reference，参见第33条）来解决此问题，或是从外界命令循环中的某个对象不再保留另外一个对象。这两种方法都能打破保留环。
+
+### 第30条：以ARC简化引用计数
+在引用计数的概念中，需要执行保留和释放操作的地方很容易就能看出来。所以Clang编译器项目带有一个“静态分析器”（static analyzer），用于指明程序里引用计数出问题的地方。假设下面这段代码使用MRC管理：
+
+    if ([self shouldLogMsg]) {
+      NSString* message = [[NSString alloc] initWithFormat:@"I am object, %p", self];
+      NSLog(@"message = %@", message);
+    }
+    
+此代码有内存泄漏问题，因为if语句末尾并未释放`message`对象。由于在if语句之外无法引用`message`，所以此对象所占的内存泄漏（没有正确释放已经不再使用的内存）了。判定内存是否泄漏所用的规则很简单：调用`NSString`的`alloc`方法所返回的那个`message`对象的保留计数比期望值要多1。然而却没有与之对应的释放操作来抵消。  
+自动引用计数所做的事情与其名称相符，就是自动管理引用计数。ARC将自动把代码改写为下列形势：
+
+    if ([self shouldLogMsg]) {
+      NSString* message = [[NSString alloc] initWithFormat:@"I am object, %p", self];
+      NSLog(@"message = %@", message);
+      [message release];  ///< Added by ARC
+    }
+    
