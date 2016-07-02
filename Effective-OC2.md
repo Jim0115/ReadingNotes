@@ -123,4 +123,15 @@ OC使用引用计数来管理内存，也就是说，每个对象都有个可以
       // ARC 会自动添加 [personOne release];
     }
     
-除了会自动调用`retain`和`release`方法外，使用ARC还有其他好处，它可以执行一些手工操作很难甚至无法完成的优化。例如，在编译期，ARC会把能够相互抵消的`retain、release、autorelease`操作约简。如果发现在同一个对象上多次执行了`retain、release`操作，那么ARC又是可以成对移除这两个操作。  
+除了会自动调用`retain`和`release`方法外，使用ARC还有其他好处，它可以执行一些手工操作很难甚至无法完成的优化。例如，在编译期，ARC会把能够相互抵消的`retain、release、autorelease`操作约简。如果发现在同一个对象上多次执行了`retain、release`操作，那么ARC有时可以成对移除这两个操作。  
+ARC也包括运行期组件。此时执行的优化很有意义。前面讲到，某些方法在返回对象前，为其执行了`autorelease`操作，而调用方法的代码可能需要将返回的对象保留，比如：
+
+    _myPerson = [EOCPerson personWithName:@"Bob Smith"];
+    
+调用`personWithName:`方法会返回新的`EOCPerson`对象，而此方法在返回对象之前，为其调用了`autorelease`方法。由于实例变量是个强引用，所以编译器在设置其值的时候还需要执行一次保留操作。因此，前面那段代码与下面这段MRC代码等效：
+    
+    EOCPerson* tmp = [EOCPerson personWithName:@"Bob Smith"];
+    _myPerson = [tmp retain];
+
+此时应该能看出，`personWithName:`方法中的`autorelease`和上段代码中的`retain`都是多余的。为提升性能，可将二者删去。但是，在ARC环境下编译代码时，必须考虑“向后兼容性”（backward compatibility），以兼容那些不使用ARC的代码。其实本来ARC也可以直接舍弃`autorelease`这个概念，并且规定，所有从方法中返回的对象其保留计数都比期望值多1。但是，这样做就破坏了向后兼容性。  
+不过，ARC可以在运行期检测到这一对多余的操作，
