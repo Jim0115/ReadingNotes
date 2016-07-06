@@ -134,4 +134,4 @@ ARC也包括运行期组件。此时执行的优化很有意义。前面讲到�
     _myPerson = [tmp retain];
 
 此时应该能看出，`personWithName:`方法中的`autorelease`和上段代码中的`retain`都是多余的。为提升性能，可将二者删去。但是，在ARC环境下编译代码时，必须考虑“向后兼容性”（backward compatibility），以兼容那些不使用ARC的代码。其实本来ARC也可以直接舍弃`autorelease`这个概念，并且规定，所有从方法中返回的对象其保留计数都比期望值多1。但是，这样做就破坏了向后兼容性。  
-不过，ARC可以在运行期检测到这一对多余的操作 回校考试3
+不过，ARC可以在运行期检测到这一对多余的操作，也就是`autorelease`及紧跟其后的`retain`。为了优化代码，在方法中返回自动释放的对象时，要执行一个特殊函数。此时不直接调用对象的`autorelease`方法，而是改为调用`objc_autoreleaseReturnValue`
