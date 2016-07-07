@@ -134,4 +134,7 @@ ARC也包括运行期组件。此时执行的优化很有意义。前面讲到�
     _myPerson = [tmp retain];
 
 此时应该能看出，`personWithName:`方法中的`autorelease`和上段代码中的`retain`都是多余的。为提升性能，可将二者删去。但是，在ARC环境下编译代码时，必须考虑“向后兼容性”（backward compatibility），以兼容那些不使用ARC的代码。其实本来ARC也可以直接舍弃`autorelease`这个概念，并且规定，所有从方法中返回的对象其保留计数都比期望值多1。但是，这样做就破坏了向后兼容性。  
-不过，ARC可以在运行期检测到这一对多余的操作，也就是`autorelease`及紧跟其后的`retain`。为了优化代码，在方法中返回自动释放的对象时，要执行一个特殊函数。此时不直接调用对象的`autorelease`方法，而是改为调用`objc_autoreleaseReturnValue`
+不过，ARC可以在运行期检测到这一对多余的操作，也就是`autorelease`及紧跟其后的`retain`。为了优化代码，在方法中返回自动释放的对象时，要执行一个特殊函数。此时不直接调用对象的`autorelease`方法，而是改为调用`objc_autoreleaseReturnValue`。此函数会检视当前方法返回后要执行的那段代码。若发现那段代码上要在返回的对象上执行`retain`操作，则设置全局数据结构中的一个标志位，而不执行`autorelease`操作。如果方法返回了一个自动释放的对象，而调用方法的代码要保留此对象，那么不直接执行`retain`，而是改为执行`objc_retainAutoreleasedReturnValue`函数。此函数要检测刚才提到的标志位，若已经置位，则不执行`retain`操作。设置并检测标志位，要比调用`autorelease`和`retain`更快。
+
+#### 变量的内存管理语义
+ARC也会处理局部变量与实例变量的内存管理。默认情况下，每个变量都是指向对象的强引用
