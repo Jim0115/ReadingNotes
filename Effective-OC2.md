@@ -137,4 +137,54 @@ ARC也包括运行期组件。此时执行的优化很有意义。前面讲到�
 不过，ARC可以在运行期检测到这一对多余的操作，也就是`autorelease`及紧跟其后的`retain`。为了优化代码，在方法中返回自动释放的对象时，要执行一个特殊函数。此时不直接调用对象的`autorelease`方法，而是改为调用`objc_autoreleaseReturnValue`。此函数会检视当前方法返回后要执行的那段代码。若发现那段代码上要在返回的对象上执行`retain`操作，则设置全局数据结构中的一个标志位，而不执行`autorelease`操作。如果方法返回了一个自动释放的对象，而调用方法的代码要保留此对象，那么不直接执行`retain`，而是改为执行`objc_retainAutoreleasedReturnValue`函数。此函数要检测刚才提到的标志位，若已经置位，则不执行`retain`操作。设置并检测标志位，要比调用`autorelease`和`retain`更快。
 
 #### 变量的内存管理语义
-ARC也会处理局部变量与实例变量的内存管理。默认情况下，每个变量都是指向对象的强引用
+ARC也会处理局部变量与实例变量的内存管理。默认情况下，每个变量都是指向对象的强引用。
+
+    @interface EOCClass : NSObject {
+      id _object;
+    }
+    
+    @implementation EOCClass 
+    - (void) setup {
+      _object = [EOCOtherClass new];
+    }
+    @end
+    
+在MRC时，实例变量并不会自动保留其值，而在ARC环境下则会这样做。也就是说，在ARC下，`setup`方法会变成：
+
+    - (void)setup {
+      id tmp = [EOCOtherClass new];
+      _object = [tmp retain];
+      [_tmp release];
+    }
+    
+在此情况下，`retain`和`release`可以消去。所以，ARC会将这两个操作化简掉，实际执行的代码还是和原来一样。不过，在编写setter时，使用ARC会简单一些。如果不用ARC，那么需要像下面这样写：
+
+    - (void)setObject:(id)object {
+      [object retain];
+      [_object release];
+      _object = object;
+    }
+    
+在应用程序中，可用下列修饰符来改变局部变量与实例变量的语义：
+
+* `__strong`：默认语义，保留此值。
+* `__unsafe_unretained`：不保留此值，这样做可能不安全，因为等到再次使用变量时，其对象可能已经回收了
+* `__weak`：不保留此值，但是变量可以安全使用，如果系统回收了这个对象，变量会自动置为nil
+* `__autoreleasing`：把对象“按引用传递”（pass by reference）给方法时，使用这个特殊的修饰符。此值在方法返回时自动释放。
+
+#### ARC如何清理实例变量
+ARC也负责对实例变量进行内存管理。要清理其内存，ARC就必须在dealloc时生成必要的清理代码（cleanup code）。凡是具备强引用的变量，都必须释放，ARC会在dealloc方法中插入这些代码。在MRC时，使用以下的dealloc方法：
+
+    - (void)dealloc {
+      [_foo release];
+      [_bar release];
+      [super dealloc];
+    }
+在ARC下，不需要这样写。但是，如果有非OC的对象，比如`CoreFoundation`中的对象或是由`malloc()`分配在堆中的内存，仍然需要清理。然而不需要调用父类的`dealloc`方法。
+
+    - (void)dealloc {
+      CFRelease(_coreFoundationObject);
+      free(_heapAllocatedMemoryBlob);
+    }
+    
+### 第31条：在`dealloc`方法中只释放引用并解除监听
