@@ -34,5 +34,20 @@ view的背景颜色，animatable。默认值是nil，表示透明的view。
 `var clipsToBounds: Bool`  
 true表示超出该视图可见bounds的部分将被裁剪第掉。默认值为false
 
-`var clearsContextBeforeDrawing: Bool`
-在绘制前是否自动清除bounds的内容。如果为true，则会在下一次绘制前清空上一次绘制的内容
+`var clearsContextBeforeDrawing: Bool`  
+在绘制前是否自动清除bounds的内容。如果为true，则会在下一次绘制前清空上一次绘制的内容。默认为true  
+如果设置此属性为false，则必须保证view的内容在`drawRect:`方法中被正确绘制。如果关于绘制的代码经过严格的优化，设置此属性为false可以提高绘制的性能，尤其是在只有视图的部分内容需要重绘的情况下。
+
+`var maskView: UIView?`  
+相关资料暂缺
+
+`class func layerClass() -> AnyClass`  
+返回当前类的实例的layer的类型。  
+默认返回`CALayer`。子类可以重写此方法返回不同的layer类型。  
+此方法只在创建视图的早期被调用一次。
+
+`var layer: CALayer { get }`  
+此view用于渲染的Core Animation Layer。
+此view是其layer的delegate
+
+### Configuring the Event-Related Behavior
