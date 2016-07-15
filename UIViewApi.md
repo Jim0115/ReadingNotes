@@ -51,3 +51,6 @@ true表示超出该视图可见bounds的部分将被裁剪第掉。默认值为f
 此view是其layer的delegate
 
 ### Configuring the Event-Related Behavior
+`var userInteractionEnabled: Bool`  
+view是否响应事件。  
+若为false，用户事件（触碰、键盘点击等）将被忽略并从事件队列中被移除。默认为true。  
