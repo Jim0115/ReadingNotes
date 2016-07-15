@@ -54,3 +54,7 @@ true表示超出该视图可见bounds的部分将被裁剪第掉。默认值为f
 `var userInteractionEnabled: Bool`  
 view是否响应事件。  
 若为false，用户事件（触碰、键盘点击等）将被忽略并从事件队列中被移除。默认为true。  
+在动画过程中，涉及到的view会临时禁用userInteraction，除非使用`UIViewAnimationOptionAllowUserInteraction`选项。
+
+`var multipleTouchEnabled: Bool`  
+视图是否处理多点触控事件。
