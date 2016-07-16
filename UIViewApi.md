@@ -58,4 +58,12 @@ view是否响应事件。
 
 `var multipleTouchEnabled: Bool`  
 视图是否处理多点触控事件。默认为false  
-当此属性为false时，同一window的其他view仍然可以接收到触摸事件。
+当此属性为false时，同一window的其他view仍然可以接收到触摸事件。如果想让此view独占多点触控事件的处理，需要将此属性和`exclusiveTouch`属性同时设为true
+
+`var exclusiveTouch: Bool`  
+view是否独占事件的处理  
+将此属性设为true将组织view将事件传递给同一window下的其他view，默认为false
+
+### Configuring the Bounds and Frame Rectangles
+`var frame: CGRect`  
+在父视图的坐标系中当前视图的位置和大小  
