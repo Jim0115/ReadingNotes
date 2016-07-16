@@ -57,4 +57,5 @@ view是否响应事件。
 在动画过程中，涉及到的view会临时禁用userInteraction，除非使用`UIViewAnimationOptionAllowUserInteraction`选项。
 
 `var multipleTouchEnabled: Bool`  
-视图是否处理多点触控事件。
+视图是否处理多点触控事件。默认为false  
+当此属性为false时，同一window的其他view仍然可以接收到触摸事件。
