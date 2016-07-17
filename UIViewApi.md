@@ -67,3 +67,17 @@ view是否独占事件的处理
 ### Configuring the Bounds and Frame Rectangles
 `var frame: CGRect`  
 在父视图的坐标系中当前视图的位置和大小  
+若需要在修改此属性后调用`drawRect:`方法重绘视图，需要将view的`contentMode`属性设置为`UIViewContentModeRedraw`  
+修改此属性可以动画化。如果修改了view的`transform`属性，则不应该再修改其`frame`，而是通过`center`和`bounds`属性修改其位置和大小。
+
+`var bounds: CGRect`
+view在其自身坐标系中的位置和大小  
+默认情况下`bounds`的`origin`被设置为(0, 0)，可以修改此`origin`以显示view不同的部分。  `bounds`的`size`与`frame`的`size`相连，意味着修改一个会导致两个产生相同的变化，同时也会导致`center`属性对应变化   
+修改此属性可以动画化。  
+默认值为(0, 0, frame.width, frame.height)
+
+`var center: CGPoint`  
+在父视图坐标系中frame的中心点所在的位置，修改此属性将会导致frame的`origin`改变  
+
+`var transform: CGAffineTransform`
+
