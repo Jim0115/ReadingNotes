@@ -87,7 +87,45 @@ transform的原点是view的`center`，如果layer的`anchorPoint`改变则为�
 如果view经过transform，view的`frame`会产生未定义的结果，所以应当被忽略。
 
 ### Managing the View Hierarchy
+`var superview: UIView? { get }`  
+获取当前view的父视图  
 
+`var subviews: [UIView] { get }`
+当前view的直接子视图  
+通过此属性可以获取自定义view的结构，数组中view的顺序反映了subview的可见顺序，排在数组前面的view的可见性靠后，即`addSubview`总是将新的视图加到数组的末尾。  
+
+`var window: UIWindow? { get }`  
+view所在的window，为nil表示view还未被添加到window或其子视图中。
+
+`func addSubview(_ view: UIView)`  
+将`view`加到`self.subview`数组的末尾，即最新的view总是在最上方  
+如果`view`已经在其他视图中，将会从原结构中移除，再添加到当前视图中  
+
+`func bringSubviewToFront(_ view: UIView)`  
+将一个view移到`subviews`数组的最后使其显示在最上层。对于不在其结构中的view调用此方法无效。
+
+`func sendSubviewToBack(_ view: UIView)`  
+将一个view移到`subviews`数组的头部使其显示在最下层。对于不在其结构中的view调用此方法无效。  
+
+`func removeFromSuperview()`  
+将receiver从其父视图中移除，同时从responder chain 中移除。
+调用此方法将会移除父视图中所有与此视图相关的约束。
+
+`func insertSubview(_ view: UIView, atIndex index: Int)`  
+在指定index位置插入view。
+
+`func insertSubview(_ view: UIView, aboveSubview siblingSubview: UIView)`  
+`func insertSubview(_ view: UIView, belowSubview siblingSubview: UIView)`  
+将view插入到某个子视图的上方/下方。  
+
+`func exchangeSubviewAtIndex(_ index1: Int, withSubviewAtIndex index2: Int)`  
+交换`subviews`数组中的两个view，以修改其上下关系  
+
+`func isDescendantOfView(_ view: UIView) -> Bool`  
+判断view是否为当前view的后代。
+
+### Configuring the Resizing Behavior  
+`var autoresizingMask: UIViewAutoresizing`
 
 ---
 ### CGAffineTransform 仿射变换
