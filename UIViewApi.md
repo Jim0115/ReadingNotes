@@ -79,5 +79,9 @@ view在其自身坐标系中的位置和大小
 `var center: CGPoint`  
 在父视图坐标系中frame的中心点所在的位置，修改此属性将会导致frame的`origin`改变  
 
-`var transform: CGAffineTransform`
-
+`var transform: CGAffineTransform`  
+指定view进行的transform  
+transform的原点是view的`center`，如果layer的`anchorPoint`改变则为该点。默认值为`CGAffineTransformIdentity`，即3x3单位矩阵。  
+修改此属性可以动画化。  
+`transform`属性不对Autolayout产生影响，Autolayout计算基于未经过`transform`的`frame`。  
+如果view经过transform，view的`frame`会产生未定义的结果，所以应当被忽略。
