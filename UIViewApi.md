@@ -85,3 +85,42 @@ transform的原点是view的`center`，如果layer的`anchorPoint`改变则为�
 修改此属性可以动画化。  
 `transform`属性不对Autolayout产生影响，Autolayout计算基于未经过`transform`的`frame`。  
 如果view经过transform，view的`frame`会产生未定义的结果，所以应当被忽略。
+
+### Managing the View Hierarchy
+
+
+---
+### CGAffineTransform 仿射变换
+![image](https://docs-assets.developer.apple.com/published/8a0bbde8e5/equation01_2x_fabc9070-1967-4d6f-a086-17ab5fcfef6d.png)  
+
+    Swift: 
+    CGAffineTransform(a: CGFloat, b: CGFloat, c: CGFloat, d: CGFloat, tx: CGFloat, ty: CGFloat)
+    
+    Objective-C:
+    CGAffineTransformMake(CGFloat a, CGFloat b, CGFloat c, CGFloat d, CGFloat tx, CGFloat ty);
+    
+由于最后一列总为(0, 0, 1)，所以只需要六个参数即可确定变换矩阵。  
+变换的公式为：  
+![image](https://docs-assets.developer.apple.com/published/8a0bbde8e5/equation02_2x_71f7e62f-7cbe-4670-9b34-924b49e48f72.png)  
+即：  
+![image](https://docs-assets.developer.apple.com/published/8a0bbde8e5/equation03_2x_b4b74916-ba29-4c3c-8fa2-ada82ad5c659.png)
+
+#### 常用方法
+`func CGAffineTransformMakeRotation(_ angle: CGFloat) -> CGAffineTransform`  
+以`center`为轴顺时针旋转angle弧度 (M_PI, M_PI_2...)  
+![image](http://wangshijiedemacbook-pro.local:55667/Dash/enxijbwn/documentation/GraphicsImaging/Reference/CGAffineTransform/Art/equation10_2x.png)
+
+`func CGAffineTransformMakeScale(_ sx: CGFloat, _ sy: CGFloat) -> CGAffineTransform`  
+以`center`为中心缩放`sx`、`sy`倍。  
+![image](http://wangshijiedemacbook-pro.local:55667/Dash/enxijbwn/documentation/GraphicsImaging/Reference/CGAffineTransform/Art/equation08_2x.png)
+
+`func CGAffineTransformMakeTranslation(_ tx: CGFloat, _ ty: CGFloat) -> CGAffineTransform`  
+将view向x、y方向移动tx、ty  
+![image](http://wangshijiedemacbook-pro.local:55667/Dash/enxijbwn/documentation/GraphicsImaging/Reference/CGAffineTransform/Art/equation06_2x.png)  
+
+#### 对已有transform进行操作
+`func CGAffineTransformTranslate(_ t: CGAffineTransform, _ tx: CGFloat, _ ty: CGFloat) -> CGAffineTransform`平移  
+`func CGAffineTransformScale(_ t: CGAffineTransform, _ sx: CGFloat, _ sy: CGFloat) -> CGAffineTransform`缩放  
+`func CGAffineTransformRotate(_ t: CGAffineTransform, _ angle: CGFloat) -> CGAffineTransform`旋转  
+`func CGAffineTransformInvert(_ t: CGAffineTransform) -> CGAffineTransform`转置  
+`func CGAffineTransformConcat(_ t1: CGAffineTransform, _ t2: CGAffineTransform) -> CGAffineTransform`乘积
