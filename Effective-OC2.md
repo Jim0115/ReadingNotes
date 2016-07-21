@@ -229,4 +229,23 @@ OC对象的生命期取决于其引用计数。在OC的引用计数架构中，�
       [self doSomethingWithInt:i];
     }
     
-如果`doSomethingWithInt:`方法要创建临时对象，那么这些对象很可能在自动释放池里。比如说，可能是一些临时字符串。但是，即使这些对象在调用完方法之后就不再使用了，它们也依然处于存活状态，因为目前还在自动释放池里，等待系统稍后将其释放并回收。然而，autoreleasepool要等待线程执行下一次runloop时才会清空。这就意味着，在for循环执行时会持续创建新对象，并加入自动释放池中。所有这些对象都要等到for循环执行结束才会释放。这样一来，在执行for循环时，应用程序所占内存就会持续上涨。等到所有临时对象都释放后，内存用量又会突然下降。
+如果`doSomethingWithInt:`方法要创建临时对象，那么这些对象很可能在自动释放池里。比如说，可能是一些临时字符串。但是，即使这些对象在调用完方法之后就不再使用了，它们也依然处于存活状态，因为目前还在自动释放池里，等待系统稍后将其释放并回收。然而，autoreleasepool要等待线程执行下一次runloop时才会清空。这就意味着，在for循环执行时会持续创建新对象，并加入自动释放池中。所有这些对象都要等到for循环执行结束才会释放。这样一来，在执行for循环时，应用程序所占内存就会持续上涨。等到所有临时对象都释放后，内存用量又会突然下降。  
+这种情况不甚理想，尤其当循环长度无法预知，必须取决于用户输入时更是如此。比如说，要从数据库里读取需对对象许多对象。代码可能会这么写：
+
+    NSArray* databaseRecords = /* ... */;
+    NSMutabelArray* people = [NSMutableArray new];
+    for (NSDictionary* record in databaseRecords) {
+      EOCPerson* person = [[EOCPerson alloc] initWithRecord:record];
+      [people addObject:person];
+    }
+    
+若记录中有很多条，则内存中也会有很多不必要的临时对象，它们本来应该提前回收的。如果把循环内的代码包裹在“自动释放池块”中，那么在循环中自动释放的对象就回放在这个池，而不是线程的主池里面。
+
+    NSArray* databaseRecords = /* ... */;
+    NSMutabelArray* people = [NSMutableArray new];
+    for (NSDictionary* record in databaseRecords) {
+      @autoreleasepool {
+        EOCPerson* person = [[EOCPerson alloc] initWithRecord:record];
+        [people addObject:person];
+      }
+    }
