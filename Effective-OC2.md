@@ -271,3 +271,58 @@ block其实就是个值，而且自有其相关类型。与int、float或OC对�
     void (^someBlock)() = ^{
       // Block implementation here
     };
+    
+block类型的语法结构如下：
+
+    return_type (^block_name)(parameters)
+    
+    int (^addBlock)(int, int) = ^(int a, int b) {
+      return a + b;
+    };
+    
+    int sum = addBlock(2, 5); // 7
+    
+block的强大之处是：在声明它的范围内，所有变量都可以为其所捕获。这也就是说，那个范围内的全部变量，在block内依然可用。
+
+    int additional = 5;
+    
+    int (^addBlock)(int, int) = ^(int a, int b) {
+      return a + b + additional;
+    };
+    
+    int sum = addBlock(2, 5); // 12
+    
+默认情况下，block捕获的变量是不能在block内修改的。不过，声明变量是可以加上`__block`修饰符，就可以在block内修改了。
+
+    NSArray* array = @[@0, @1, @2, @3, @4, @5];
+    __block NSInteger count = 0;
+    [array enumerateObjectUsingBlock:^(NSNumber* number, NSUInteger idx, BOOL* stop) {
+      if ([number compare:@2] == NSOrderedAscending) {
+        count++;
+      }
+    }];
+    
+    // count = 2
+    
+这段代码也演示了“内联块”（inline block）的用法。传给`enumerateObjectUsingBlock:`方法的block并未先赋给局部变量，而是直接内联在函数调用里了。由这种常见的编码习惯也可以看出block为何如此有用。在OC引入block这一特性之前，要想实现相同的功能，就必须传入函数指针或selector，以供枚举方法调用。  
+如果block捕获的变量是对象类型，那么就会自动retain它。系统在释放这个block的时候，也会将其一并释放。这就引出了一个与block相关的重要问题。block本身也可视为对象。实际上，在其他OC对象能响应的selector中，有很多也是block能响应的。而最重要之处在于，block本身也和其他对象一样，有引用计数。当最后一个指向block的引用移走之后，block就回收了。回收时也会释放block所捕获的变量，以便平衡捕获时所执行的retain操作。  
+如果将block定义在OC类的实例方法("-"开头)中，那么出了可以访问到类的所有实例变量之外，还可以使用`self`变量，所以在声明时无需加`__block`。不过，如果通过读取或写入操作捕获了实例变量，那么也会自动把`self`变量一并捕获了，因为实例变量是与`self`所指代的实例关联在一起的。
+
+    @interface EOCClass
+    
+    - (void)anInstanceMethod {
+      // ...
+      void (^someBlock)() = ^{
+        _anInstanceVariable = @"something";
+        NSLog(@"%@", _anInstanceVariable);
+      };
+    }
+    
+    @end
+如果某个`EOCClass`实例正在执行`anInstanceMethod`方法，那么`self`变量就指向此实例。由于block中没有明确使用`self`变量，所以很容易就忘记`self`变量其实也被block所捕获了。直接访问实例变量和通过`self`来访问是等价的：
+
+    self -> __anInstanceVariable = @"something";
+    
+之所以要捕获`self`变量，原因正在于此。`self`也是个变量，因而block在捕获它的时候也会retain。如果`self`指代的那个对象同时也保留了block，那么这种情况通常就会形成“保留环”。参见第40条。
+
+#### block的内部结构
