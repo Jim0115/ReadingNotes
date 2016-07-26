@@ -326,3 +326,47 @@ block的强大之处是：在声明它的范围内，所有变量都可以为其
 之所以要捕获`self`变量，原因正在于此。`self`也是个变量，因而block在捕获它的时候也会retain。如果`self`指代的那个对象同时也保留了block，那么这种情况通常就会形成“保留环”。参见第40条。
 
 #### block的内部结构
+每个OC对象都占据着某个内存区域。因为实例变量的个数及对象所包含的关联数据互不相同，所以每个对象所占的内存区域也有大有小。block本身也是对象，在存放block对象的内存区域中，首个变量是指向`Class`对象的指针`isa`。其余内存里含有block对象正常运转所需的各种信息。
+
+#### 全局block，栈block和堆block
+定义block的时候，其所占的内存区域是分配在栈中的。这就是说，block只在定义它的那个范围内有效。下面这段代码就有危险：
+
+    void (^block)();
+    
+    if (someCondition) {
+      block = ^{
+        NSLog(@"Block A");
+      };
+    } else {
+      block = ^{
+        NSLog(@"Block B");
+      };
+    }
+    
+    block();
+    
+定义在`if`和`else`语句中的两个block都分配在栈内存中。编译器会给每个block分配好栈内存，然而等离开了相应的范围后，编译器可能将分配给block的内存覆盖掉。于是，这两个block只能在对应的`if-else`语句中有效。这样写出的程序可以编译，但运行起来时而正确，时而错误。取决于编译器是否覆盖了待执行的block。  
+解决此问题，可以给block发送`copy`消息，将其从栈复制到堆。复制后的block，就可以在定义范围外使用。而且，一旦复制到对象，block就变成了带引用计数的对象了。后续的复制操作不会真的执行复制，只是递增block对象的引用计数。如果不再使用这个block，就应该将其释放，在ARC下会自动释放，在MRC下需要手动调用`release`方法。当引用计数降为0后，heap stack会被系统回收。而stack block无需明确释放，会自动回收。
+
+    void (^block)();
+   
+    if (someCondition) {
+      block = [^{
+        NSLog(@"Block A");
+      } copy];
+    } else {
+      block = [^{
+        NSLog(@"Block B");
+      } copy];
+    }
+    
+    block();
+    
+除了堆block和栈block外，还有一种全局block（global block）。这种block不会捕捉任何状态，运行时也无须状态参与。block所使用的整个内存区域在编译期就已经确定了，因此，全局block可以声明在全局内存中，不需要每次用到时在栈中创建。此外，全局block的`copy`操作是个空操作，因为全局block绝不会被系统回收。这种实际上block相当于单例。
+
+    void (^block)() = ^{
+      NSLog(@"This is a global block");
+    };
+如果把简单的block当成复杂的block处理，那么就会在复制和回收该block时执行一些无谓的操作。
+
+### 第38条：为常用的block创建typedef
