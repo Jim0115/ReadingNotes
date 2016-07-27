@@ -370,3 +370,48 @@ block的强大之处是：在声明它的范围内，所有变量都可以为其
 如果把简单的block当成复杂的block处理，那么就会在复制和回收该block时执行一些无谓的操作。
 
 ### 第38条：为常用的block创建typedef
+每个block都有其固有类型（inherent type），因而可将其赋值给适当类型的变量。这个类型由block接受的参数和其返回值组成。
+
+    ^(BOOL flag, int value) {
+      if (flag) {
+        return value * 5;
+      } else {
+        return value * 10;
+      }
+    }
+此block接受两个类型分别为BOOL和int的参数，返回int类型的值。如果想将其赋给变量，则需要注意其类型。
+
+    int (^variableName)(BOOL flag, int value) = ^(BOOL flag, int value) {
+      if (flag) {
+        return value * 5;
+      } else {
+        return value * 10;
+      }
+    }
+与其它类型的变量不同，在定义block变量时，要把变量名放在类型之中，而不要放在右边。这种语法非常难记。因此，我们应该为常用的block起个别名，尤其是在打算把代码发布成API供他人使用时，更应该这样做。  
+为了隐藏复杂的block类型，需要用到C语言中“类型定义”（type definition）的特性。`typedef`关键字用于给类型起个易懂的别名。
+
+    typedef int(^EOCSomeBlock)(BOOL flag, int value);
+    
+    EOCSomeBlock block = ^(BOOL flag, int value) {
+      // Implementation
+    };
+    
+通过这项特性，可以把使用block的API做得更加易用些。类里面又些方法可能需要用block来做参数，比如执行异步任务时所用的`completion handler`参数就是block，但凡遇到这种情况，都可以通过定义别名使代码变得更易懂。
+
+    - (void)startWithCompletionHandler:(void (^)(NSData* data, NSError* error))completion;
+    
+    typedef void(^EOCCompletionHandler)(NSData* data, NSError* error);
+    
+    - (void)startWithCompletionHandler:(EOCCompletionHandler)completion;
+    
+另一个好处是，重构block的类型签名时会很方便。比如说，要给原来的`completion handler`再加一个参数，只需修改typedef语句即可。
+
+    typedef void(^EOCCompletionHandler)(NSData* data, NSTimeInterval duration, NSError* error);
+    
+### 第39条：用handler block降低代码分散程度
+为UI编码时，一种常见的范式就是“异步执行任务”（perform task asynchronously）。好处在于：处理UI现实及触摸操作所用的线程，不会因为执行IO或网络之类的耗时操作而阻塞。这个线程通常称为主线程（main thread）。若把异步任务做成同步的，那么在执行任务时，UI就会无法响应用户输入了。如果App一定时间内无响应，就会被系统终止。  
+异步方法在执行完任务后，需要以某种手段通知相关代码。实现此功能有很多方法，常用的是设计一个`delegate protocol`，令关注此事件的对象遵从此协议。  
+这种做法确实可行，而且没有什么错误。然而如果改用block来写的话，代码会更清晰。block可以令这种API更加紧凑，同时也令开发者调用时更加方便。办法就是：把completion handler定义为block类型，将其当作参数直接传给方法。
+
+### 第40条：用block引用其所属对象时不要出现保留环
