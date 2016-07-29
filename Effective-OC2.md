@@ -415,3 +415,60 @@ block的强大之处是：在声明它的范围内，所有变量都可以为其
 这种做法确实可行，而且没有什么错误。然而如果改用block来写的话，代码会更清晰。block可以令这种API更加紧凑，同时也令开发者调用时更加方便。办法就是：把completion handler定义为block类型，将其当作参数直接传给方法。
 
 ### 第40条：用block引用其所属对象时不要出现保留环
+使用block时，若不仔细考虑，则很容易出现“保留环”（retain cycle）。  
+获取器对象之所以要把completion handler保存在属性中，其唯一的目的就是想在稍后使用这个block。可是获取器一旦运行过block之后，就没有必要再保留它了。在使用之后将保留block的属性置为nil即可。
+
+### 第41条：多用dispatch queue，少用同步锁
+在OC中，如果有多个线程想要执行同一段代码，那么有时可能会出问题。这种情况下，通常要使用锁来实现某种同步机制。在GCD出现前，有两种办法，第一种是采用内置的“同步block”（syncchronization block）:
+
+    - (void)synchronizedMethod {
+      @synchronized(self) {
+        // Safe with self
+      }
+    }
+    
+这种写法会根据给定的对象，自动创建一个锁，并等待block中的代码执行完毕。执行到代码结尾处，锁就释放了。这么写通常没错，因为它可以保证每个对象实例都能不受干扰地运行其`synchronizedMethod`方法。然而，滥用`@synchronized(self)`则会降低代码效率，因为共用一个锁的那些同步block，都必须按顺序执行。若是在`self`对象上频繁加锁，那么程序可能要等另一段与此无关的代码执行完毕，才能继续执行当前代码，这样做其实没有什么必要。  
+另一个办法是直接使用`NSLock`对象：
+
+    _lock = [[NSLock alloc] init];
+    
+    - (void)synchronizedMethod {
+      [_lock lock];
+      // Safe
+      [_lock unlock];
+    }
+也可以使用`NSRecursiveLock`这种“递归锁”（recursive lock），线程能够多次持有该锁，而不会出现死锁（deadlock）现象。  
+这两种方法都很好，但也有其缺陷。在极端情况下，同步block会导致死锁，另外，其效率也不见得很高，而直接使用锁对象，一旦遇到死锁，就会非常麻烦。  
+替代方案是实用GCD，它能以更简单，更高效的形式为代码加锁。
+
+    - (NSString *)someString {
+      @synchronized(self) {
+        return _someString;
+      }
+    }
+    
+    - (void)setSomeString:(NSString *)someString {
+      @synchronized(self) {
+        _someString = someString;
+      }
+    }
+    
+滥用`@synchronized(self)`会很危险，因为所有同步block都会彼此争夺同一个锁。要是有多个属性都这么写的话，那么每个属性的同步block都要等其他同步block执行完毕后才能执行，然而我们只想让每个属性独立的同步。  
+另外，这种做法虽然能提供某种程度上的“线程安全”（thread safety），但却无法保证访问该对象时绝对是线程安全的。访问属性的操作确实是“原子的”。使用属性时，必定能从其中获取有效值，然而在同一个线程上多次访问getter，每次获取到的结果却未必相同。在两次访问操作之间，其他线程可能会写入新的属性值。  
+有种简单的方法可以代替同步block或锁对象，那就是使用“串行同步队列”（serial synchronization queue）。将读取操作及写入操作都安排在同一个队列中，即可保证数据同步。
+
+    _syncQueue = dispatch_queue_create("com.eoc.syncQueue", NULL);
+    
+    - (NSString *)someString {
+      __block NSString* localSomeString;
+      dispatch_sync(_syncQueue, ^{
+        localSomeString = _someString;
+      });
+      return localSomeString;
+    }
+    
+    - (void)setSomeString:(NSString *)someString {
+      dispatch_sync(_syncQueue, ^{
+        _someString = someString;
+      });
+    }
