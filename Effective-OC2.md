@@ -472,3 +472,13 @@ block的强大之处是：在声明它的范围内，所有变量都可以为其
         _someString = someString;
       });
     }
+    
+此模式的思路是：把getter和setter都安排在序列化的队列中执行，这样的话，所有针对属性的访问操作就都同步了。全部加锁任务都在GCD中处理，而GCD是在相当深的底层来实现的，于是能够做许多优化。因此，开发者无需担心那些事，只要专心把访问方法写好就行。  
+还可以进一步优化。设置方法不一定非得是同步的。setter所用的block，并不需要返回什么值。
+
+    - (void)setSomeString:(NSString *)someString {
+      dispatch_async(_syncQueue, ^{
+        _someString = someString;
+      });
+    }
+执行异步派发时，需要拷贝block。若拷贝block所用的时间明显超过执行block所花的时间，则这种做法将比原来更慢。然而，若是派发给队列的block要执行更为繁重的任务，那么仍然可以考虑这种备选方案。  
