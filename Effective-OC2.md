@@ -481,4 +481,21 @@ block的强大之处是：在声明它的范围内，所有变量都可以为其
         _someString = someString;
       });
     }
-执行异步派发时，需要拷贝block。若拷贝block所用的时间明显超过执行block所花的时间，则这种做法将比原来更慢。然而，若是派发给队列的block要执行更为繁重的任务，那么仍然可以考虑这种备选方案。  
+执行异步派发时，需要拷贝block。若拷贝block所用的时间明显超过执行block所花的时间，则这种做法将比原来更慢。然而，若是派发给队列的block要执行更为繁重的任务，那么仍然可以考虑这种备选方案。 
+多个setter可以并发执行，而getter和setter之间不能并发执行，利用这个特点，还能写出更快的代码来。这次不用串行队列，而用并发队列（concurrent queue）：
+
+    _syncQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFALUT, 0);
+    
+    - (NSString *)someString {
+      __block NSString* localSomeString;
+      dispatch_sync(_syncQueue, ^{
+        localSomeString = _someString;
+      });
+      return localSomeString;
+    } 
+  
+    - (void)setSomeString:(NSString *)someString {
+      dispatch_async(_syncQueue, ^{
+        _someString = someString;
+      });
+    }
