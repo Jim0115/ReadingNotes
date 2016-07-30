@@ -499,3 +499,18 @@ block的强大之处是：在声明它的范围内，所有变量都可以为其
         _someString = someString;
       });
     }
+像这样写代码，还无法正确实现同步。所有读取操作和写入操作都会在同一个队列上执行，不过由于是并发队列，所以读取和写入操作可以随时执行。此问题用一个简单的GCD功能即可解决，就是栅栏barrier。
+
+    void dispatch_barrier_async(dispatch_queue_t queue, dispatch_block_t block);
+    void dispatch_barrier_sync(dispatch_queue_t queue, dispatch_block_t block);
+    
+在队列中，barrier block必须单独执行，不能与其他block并行。这只对并发队列有意义，因为串行队列中的block总是按顺序逐个执行的。并发队列如果发现接下来要处理的block是个barrier block，那么就会一直等到当前所有并发block都执行完毕，才回单独执行这个barrier block。等到barrier block执行过后，再按照正常方式继续向下处理。  
+可以用barrier block来实现属性的setter。在setter中使用了barrier block之后，对属性的读取操作依然可以并发执行，但写入操作却必须单独执行了。
+
+    - (void)setSomeString:(NSString *)someString P
+      dispatch_barrier_async(_syncQueue, ^{
+        _someString = someString;
+      });
+    }
+    
+    
