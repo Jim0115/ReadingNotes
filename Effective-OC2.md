@@ -513,4 +513,83 @@ block的强大之处是：在声明它的范围内，所有变量都可以为其
       });
     }
     
+### 第42条：多用GCD，少用performSelector系列方法
+OC是一门非常动态的语言，NSObject定义了几个方法，令开发者可以随意调用任何方法。这几个方法可以推迟执行方法调用，也可以指定运行方法所用的线程。这些方程原来很有用，但是在GCD出现之后，就显得不那么必要了。  
+其中最简单的是`performSelector:`，它接受一个参数，就是要执行的那个selector
+
+    - (id)performSelector:(SEL)selector
     
+    [object performSelector:@selector(selectorName)];
+    // equal to
+    [object selectorName];
+    
+这种方式看上去似乎多余。然而，如果selector是在运行期决定的，那么就能体现出这种方法的强大之处了。这就等于在动态绑定之上再次使用动态绑定，因而可以实现下面这种功能：
+
+    SEL selector;
+    if (condition1) {
+      selector = @selector(foo);
+    } else if (condition2) {
+      selector = @selector(bar);
+    } else {
+      selector = @selector(baz);
+    }
+    [object performSelector:selector];
+    
+这种编程方式非常灵活，可用来简化复杂的代码。还有一种用法，就是先把selector保存起来，等某个时间发生之后再调用。不管哪种用法，编译器都不知道要执行的selector是什么，这必须到运行期才能确定。然而，使用此特性的代价是，如果再ARC下编译代码，编译器会发出如下警告：
+
+    warning: performSelector may cause a leak because its selector is unknown
+    
+原因在于，编译器并不知道要调用的selector是什么，因此，也就不了解其方法签名和返回值，甚至连是否有返回值都不清楚。而且，由于编译器不知道方法名，所以就没办法运用ARC的内存管理规则来判定返回值是不是应该释放。因此，ARC采用了比较谨慎的做法，就是不添加释放操作。然而这么做可能导致内存泄漏，因为方法在返回对象时可能已经将其保留了。  
+这些方法不是很理想，另一个原因在于：返回值只能是void或对象类型。尽管要执行的selector也可以范围void，但`performSelector:`方法的返回值类型毕竟是id。如果想返回整数或浮点数等类型的值，就需要执行一些复杂的转换操作了，而这种转换很容易出错。  
+`performSelector`还有如下几个版本，用于在发消息时顺便传递参数：
+
+    - (id)performSelector:(SEL)selector
+               withObject:(id)object;
+    - (id)performSelector:(SEL)selector
+               withObject:(id)objectA;
+               withObject:(id)objectB;
+               
+    [object performSelector:@selector(setValue:)
+                 withObject:newValue];
+这些方法貌似有用，其实局限很多。由于参数类型为id，所以必须传入对象。不能传入基本数据类型。此外，selector最多只能接受两个参数，在参数不止两个的情况下，则没有对应的方法能够执行。  
+`performSelector`系列方法还有个功能，就是可以延后执行selector，或将其放在另一个线程执行。
+
+    - (void)performSelector:(SEL)aSelector
+                 withObject:(nullable id)anArgument
+                 afterDelay:(NSTimeInterval)delay;
+    - (void)performSelector:(SEL)aSelector
+                   onThread:(NSThread *)thr
+                 withObject:(nullable id)arg
+              waitUntilDone:(BOOL)wait;
+    - (void)performSelectorOnMainThread:(SEL)aSelector
+                             withObject:(nullable id)arg
+                          waitUntilDone:(BOOL)wait;
+这些方法太过局限。例如，执行delay的那些方法都无法处理带有两个参数的selector。而能够指定执行线程的方法也与之类似，所以也不是特别通用。如果要用，就得把许多参数打包到字典中，然后在方法中提取出来，这样会增加开销，还可能会出bug。  
+最主要的替换方案就是使用block。而且，`performSelector`系列方法提供的功能，都能通过在GCD中使用block来实现。延后执行可以使用`dispatch_after`来实现，在另一个线程上执行任务可以通过`dispatch_async`和`dispatch_sync`来实现。
+
+    dispatch_time_t time = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5.0 * NSEC_PER_SEC));
+    dispatch_after(time, dispatch_get_main_queue(), ^{
+      [self doSomething];
+    });
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self doSomething];
+    });
+    
+### 第43条：掌握GCD及Operation Queue的使用时机
+在执行后台任务时，GCD并不一定是最佳方式。还有一种技术叫做`NSOperationQueue`，它虽然与GCD不同，但是却与之相关，开发者可把操作以`NSOperation`子类的形式放在队列中，而这些操作也能够并发执行。实际上，OperationQueue在底层是用GCD来实现的。  
+在二者的差别中，首先要注意：GCD是纯C的API，而OperationQueue是OC的对象。在GCD中，任务用block来表示，而block是个轻量型数据结构。相反，operation则是个更为重量级的OC对象。虽说如此，但GCD并不总是最佳方案。有时候采用对象所带来的开销微乎其微，而带来的好处却大大超过其缺点。  
+用`NSOperationQueue`类的`addOperationQueueWithBlock:`方法搭配`NSBlockOperation`类来使用operation queue，其语法与GCD方式非常类似。使用`NSOperation`和`NSOperationQueue`的好处如下：
+
+* 取消某个operation。如果使用operation queue，那么想要取消operation是很容易的。运行任务前，可以在`NSOperation`对象上调用`cancel`方法，该方法会设置对象内的标志位，用以表明此任务不需执行，不过已经启动的任务无法取消。若是使用GCD，那就无法取消了。
+* 指定operation间的依赖关系。一个operation可以依赖其他多个operation。开发者能够指定operation间的依赖关系，使特定的operation必须在另一个operation顺利执行完毕后方可执行。
+* 通过KVO机制监控`NSOperation`对象的属性。`NSOperation`对象有许多属性都适用于KVO来监听，比如可以用`isCancelled`属性来判断任务是否已取消，又比如可以通过`isFinished`属性来判断任务是否已经完成。如果想在某个任务变更其状态时得到通知，KVO会很有用。
+* 指定operation的优先级。operation的优先级表示此operation与队列中其他operation之间的优先关系。优先级高的operation先执行，优先级低的后执行。GCD则没有直接实现此功能的方法。GCD的队列的确有优先级，不过那是针对整个队列来说的，不是针对每个block来说的。
+
+`NSOperation`对象也有“线程优先级”（thread priority），这决定了运行此操作的线程处于何种优先级上。
+
+### 第44条：通过Dispatch Group机制，根据系统资源状况来执行任务
+“派发组”（dispatch group）是GCd的一项特性，能够把任务分组。调用者可以等待这组任务执行完毕，也可以在提供callback函数之后继续执行，这组任务完成时，调用者会得到通知。这个功能有很多用途，其中最重要的用法，就是将要并发执行的多个任务和为一组，于是调用者就可以知道这些任务何时才能全部执行完毕。  
+创建dispatch group：
+    
+    dispatch_group_t group = dispatch_group_create();
