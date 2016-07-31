@@ -593,3 +593,45 @@ OC是一门非常动态的语言，NSObject定义了几个方法，令开发者�
 创建dispatch group：
     
     dispatch_group_t group = dispatch_group_create();
+    
+想把任务编组，有两个办法，第一种是用下面这个函数：
+
+    void dispatch_group_async(dispatch_group_t group, dispatch_queue_t queue, dispatch_block_t block);
+    
+它是普通`dispatch_async`函数的变体，比原来多一个参数，用于表示待执行的block所归属的组。还有种办法能够指定任务所属的dispatch group，就是使用下面这一对函数：
+
+    void dispatch_group_enter(dispatch_group_t group);
+    void dispatch_group_leave(dispatch_group_t group);
+    
+    // 方法一等价于
+    dispatch_group_enter(group);
+    dispatch_async(queue, ^{
+      // task here
+      dispatch_group_leave(group);
+    });
+    
+在使用dispatch group时，如果调用enter之后，没有相应的leave操作，那么这一组任务就永远做不完。  
+下面这个函数可等待dispatch group执行完毕：
+
+    long dispatch_group_wait(dispatch_group_t group, dispatch_time_t timeout);
+    
+此函数接受两个参数，一个是要等待的group，另一个是代表等待时间的timeout。timeout参数表示函数在等待dispatch group执行完毕时，应该阻塞多久。如果执行dispatch group所需的时间小于timeout，则返回0，否则返回非0。此参数也可以取常量`DISPATCH_TIME_FOREVER`，这表示函数会一直等着dispatch group执行完，而不会超时（time out）。  
+除了使用上述函数等待dispatch group执行完毕外，也可以换个办法，使用：
+
+    void dispatch_group_notify(dispatch_group_t group, dispatch_queue_t queue, dispatch_block_t block);
+    
+与wait函数不同的是，开发者可以向此函数传入block，等dispatch group执行完毕之后，block会在给定的queue上执行。假如线程不应阻塞，而开发者又想在那些任务全部完成时得到通知，就可以使用此方法。  
+如果想令数组中的每个对象都执行某项任务，并且想等待所有任务执行完毕，那么就可以使用这个GCD特性来实现。
+
+     dispatch_queue_t queue = dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0);
+     dispatch_group_t dispatchGroup = dispatch_group_create();
+     for (id object in collection) {
+       dispatch_group_async(dispatchGroup, queue, ^{ [object performTask]; });
+     }
+     
+     dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
+     
+若不应阻塞当前线程，则可用notify函数代替wait：
+
+    dispatch_queue_t notifyQueue = dispatch_get_main_queue();
+    dispatch_group_notify(dispatchGroup, notifyQueue, ^{ // task after completion});
