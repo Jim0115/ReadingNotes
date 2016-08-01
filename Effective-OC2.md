@@ -635,3 +635,90 @@ OC是一门非常动态的语言，NSObject定义了几个方法，令开发者�
 
     dispatch_queue_t notifyQueue = dispatch_get_main_queue();
     dispatch_group_notify(dispatchGroup, notifyQueue, ^{ // task after completion});
+    
+notify回调时所选的队列，应该根据具体情况来定。常见的是使用主队列，也可使用自定义的串行或全局并行队列。  
+事实上，并不是所有任务都需要在同一个队列中。可以把某些任务放在优先级高的队列中，同时仍然把所有任务归到一个dispatch group中，并在执行完毕后获得通知。
+
+    dispatch_queue_t lowPriorityQueue = dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0);
+    dispatch_queue_t highPriorityQueue = dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0);
+  
+    dispatch_group_t dispatchGroup = dispatch_group_create();
+  
+    for (id object in lowPriorityObjects) {
+      dispatch_group_async(dispatchGroup, lowPriorityQueue, ^{
+        [object performTask];
+      });
+    }
+  
+    for (id object in highPriorityObjects) {
+      dispatch_group_async(dispatchGroup, highPriorityQueue, ^{
+        [object performTask];
+      });
+    }
+  
+    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+      // run after completing tasks
+    });
+
+如果把任务提交到串行队列中，dispatch group的作用可以被替代。因为任务是逐个执行的，所以只需要在提交完全部任务后再提交一个block作为结束block即可。  
+为了执行队列中的block，GCD会在适当的时机自动创建新线程或复用旧线程。如果使用并发队列，那么其中又可能会有多个线程，这也就意味着多个操作可以并发执行。在并发队列中，执行任务所用的并发线程数量，取决于各种因素，而GCD主要是根据系统资源状况来判定这些因素的。  
+遍历某个collection，并在其每个元素上执行任务，这也可以用另一个GCD函数实现：
+
+    void dispatch_apply(size_t iterations, dispatch_queue_t queue, void(^block)(size_t));
+    
+此函数会将`block`追加到`queue`中`iterations`次，每次block的参数值都会递增。  
+`dispatch_async`函数是同步的，即阻塞当前线程直到所有任务执行完毕为止。使用时应注意死锁可能。
+
+### 第45条：使用dispatch_once来执行只需运行一次的线程安全代码
+
+    + (instancetype)sharedInstance {
+      static EOCClass* sharedInstance = nil;
+      static dispatch_once_t onceToken;
+      dispatch_once(&onceToken, ^{
+        sharedInstance = [[self alloc] init];
+      });
+      return sharedInstance;
+    }
+使用`dispatch_once`可以简化代码并且彻底保证线程安全，无需担心加锁或同步。由于每次调用时都必须使用相同的token，所以要声明为static。把变量定义在static作用域中，可以保证贬编译器每次执行`sharedInstance`方法时都会复用这个变量，而不会创建新变量。  
+此外，`dispatch_once`更高效。
+
+### 第46条：不要使用dispatch_get_current_queue
+使用GCD时，经常需要判断当前代码正在哪个队列上执行。
+
+    dispatch_queue_t dispatch_get_current_queue()
+    
+此函数返回当前正在执行代码的队列。不过用的时候要格外小心。  
+此函数有种典型的错误用法(antipattern)，就是用它检测当前队列是不是某个特定队列，试图以此来避免async dispatch时可能出现的死锁问题。
+
+    - (NSString *)someString {
+      __block NSString* localSomeString;
+      dispatch_sync(_syncQueue, ^{
+        localSomeString = _someString;
+      });
+      return localSomeString;
+    }
+    
+    - (void)setSomeString:(NSString *)someString {
+      dispatch_async(_syncQueue, ^{
+        _someString = someString;
+      });
+    }
+    
+这种写法的问题是，getter可能会死锁，假如调用getter的队列恰好是本例中的`_syncQueue`，那么`dispatch_sync`就一直不会返回。  
+如果使用`dispatch_get_current_queue`，或许可以用其改写这个方法，若当前队列是同步操作所针对的队列，就不执行dispatch，直接执行block。
+
+    - (NSString *)someString {
+      __block NSString* localSomeString;
+      dispatch_block_t accessorBlock = ^{
+        localSomeString = _someString;
+      };
+      
+      if (dispatch_get_current_queue() == _syncQueue) {
+        accessorBlock();
+      } else {
+        dispatch_sync(_syncQueue, accessorBlock);
+      }
+      
+      return localSomeString;
+    }
+    
