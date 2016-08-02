@@ -722,3 +722,31 @@ notify回调时所选的队列，应该根据具体情况来定。常见的是�
       return localSomeString;
     }
     
+这种做法可以处理一些简单情况。不过仍有死锁的危险。
+
+    dispatch_queue_t queueA = dispatch_queue_create("eoc.queueA", DISPATCH_QUEUE_SERIAL);
+    dispatch_queue_t queueB = dispatch_queue_create("eoc.queueB", DISPATCH_QUEUE_SERIAL);
+    
+    dispatch_sync(queueA, ^{
+      dispatch_sync(queueB, ^{
+        dispatch_sync(queueA, ^{
+          // Deadlock
+        });
+      });
+    });
+    
+这段代码执行到最内层的dispatch操作时总会死锁，因为此操作是针对queueA队列的，必须等最外层的`dispatch_sync`执行完毕才行，而最外层的`dispatch_sync`又不可能执行完毕，因为它要等最内层的`dispatch_sync`执行完，于是就死锁了。如果使用`dispatch_get_current_queue`来检测：
+
+    dispatch_sync(queueA, ^{
+      dispatch_sync(queueB, ^{
+        dispatch_block_t block = ^{ /* operation */};
+        if (dispatch_get_current_queue() == queueA) {
+          block();
+        } else {
+          dispatch_sync(queueA, block);
+        }
+      });
+    });
+    
+然而这样依然会死锁，因为`dispatch_get_current_queue`返回的是当前队列，在本例中就是queueB。  
+在这种情况下，正确的做法是：不要把存取方法做成可重入的，而是应该确保同步操作所用的队列绝不会访问属性。这种队列之应该用来同步属性。由于dispatch queue是一种极为轻量的机制，所以，可以创建多个队列以保证每项属性都有自己专用的同步队列。  
