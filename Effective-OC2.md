@@ -750,3 +750,101 @@ notify回调时所选的队列，应该根据具体情况来定。常见的是�
     
 然而这样依然会死锁，因为`dispatch_get_current_queue`返回的是当前队列，在本例中就是queueB。  
 在这种情况下，正确的做法是：不要把存取方法做成可重入的，而是应该确保同步操作所用的队列绝不会访问属性。这种队列之应该用来同步属性。由于dispatch queue是一种极为轻量的机制，所以，可以创建多个队列以保证每项属性都有自己专用的同步队列。  
+使用队列时还要注意另一个问题，这个问题会在意想不到的地方导致死锁。队列之间会形成一套层次体系，这意味着排在某条队列中的block，会在其上级队列(parent queue 父队列)里执行。层级里地位最高的那个队列总是“全局并发队列”（global concurrent queue）。  
+![image](http://7xt1ag.com1.z0.glb.clouddn.com/Screen%20Shot%202016-08-02%20at%2018.51.56.png)  
+排在队列B或队列C中的block，稍后会在队列A中依序执行。于是，排在队列A、B、C中的block总是要彼此错开执行。然而，队列D中的block，则有可能与队列A中的block（包括队列B和队列C中的block）并行，因为A和D的目标队列是个并发队列。如有必要，并发队列可以用多个线程并行执行多个block，这取决于系统资源。  
+由于队列间有层级关系，所以“检查当前队列是否为执行sync dispatch所用的队列”这种办法并不总是有效。比如说，排在队列C中的block会认为当前队列就是队列C，而如果在此block中对队列A进行sync dispatch，则同样会导致死锁。  
+
+
+### 第47条：熟悉系统框架
+将一系列代码封装成动态库（dynamic library），并在其中放入描述其接口的头文件，这样做出来的东西就叫框架。有时为iOS平台构建的第三方框架所使用的是静态库（static library），这是因为iOS不允许在其中包含动态库。这些东西严格来讲并不是真正的框架，然而也经常视为框架。不过，所有iOS平台的系统框架仍然使用动态库。  
+开发者会碰到的主要框架就是Foundation。Foundation框架中的类，使用NS这个前缀。  
+还有个与Foundation相伴的框架，叫做CoreFoundation。虽然从技术上来讲，CoreFoundation不是OC框架，但它却是编写OC应用程序时所应熟悉的重要框架。Foundation框架中的许多功能都可以在此框架中找到对应的C语言API。CoreFoundation和Foundation不仅名字相似，而且还有更紧密的联系。有个功能叫“无缝桥接”（tollfree bridging），可以把CoreFoundation中的C语言数据结构平滑转换成Foundation中的OC对象。  
+除了Foundation和CF之外，还有很多系统库：
+
+* `CFNetwork` 此框架提供了C语言级别的网络通信能力，它将“BSD套接字”（BSD socket）抽象成易于使用的网络接口。而Foundation则将该框架里的部分内容封装成OC的接口。
+* `CoreAudio` 该框架提供的C语言API可用来操作设备上的音频硬件。
+* `AVFoundation` 此框架所提供的OC对象可用来回放并录制音视频。
+* `CoreData` 此框架提供的OC接口可将对象持久化到数据库中。
+* `CoreText` 此框架提供的C语言接口可以高效执行文字排版及渲染操作。
+
+OC编程的一项重要特点，就是经常需要使用底层的C语言API。用C语言提供的API的好处是，可以绕过OC的运行时系统，从而提升执行速度。当然，由于ARC只负责OC的对象，所以使用这些API时要注意内存管理问题。
+
+### 第48条：多用block枚举，少用for循环
+在编程中经常需要列举collection中的元素，当前的OC语言有多种方法实现此功能。
+#### for循环
+    NSArray* anArray = ...;
+    for (int i = 0; i < anArray.count; i++) {
+      id object = anArray[i];
+      // do sth
+    }
+    
+    NSDictionary* aDictionary = ...;
+    NSArray* keys = [aDictionary allKeys];
+    for (int i = 0; i < keys.count; i++) {
+      id key = keys[i];
+      id value = aDictionary[key];
+      // do sth
+    }
+  
+    NSSet* aSet = ...;
+    NSArray* objects = [aSet allObjects];
+    for (int i = 0; i < objects.count; i++) {
+      id object = objects[i];
+      // do sth
+    }
+根据定义，字典和Set都是无序的，无法通过下标访问其中的值。于是就需要先获取字典中的所有key或set中的所有对象，这两种情况下，都可以在获取到的有序数组上遍历。创建这个附加数组有额外开销。  
+for循环可以实现反向遍历，此时使用for循环比其他方式简单许多。
+
+#### 使用OC 1.0的NSEnumerator来遍历
+NSEnumerator是个抽象类，其中只定义了两个方法，供其具体子类（concrete subclass）来实现：
+
+    - (NSArray *)allObjects;
+    - (id)nextObject;
+
+其中关键的方法是`nextObject`，它返回枚举里的下个对象。每次调用该方法时，其内部数据结构都会更新，使得下次调用能返回下个对象。等到枚举中的全部对象都已返回之后，再调用就讲返回nil，这表示达到枚举末端了。
+
+    NSArray* anArray = ...;
+    NSEnumerator* enumerator = [anArray objectEnumerator];
+    id object;
+    while ((object = [enumerator nextObject]) != nil) {
+      // do sth
+    }
+这种写法的功能和标准的for循环相似，但是代码却多了一点。其真正优势在于：不论遍历哪种collection，都可以采用这套相似的语法。  
+使用`NSEnumerator`还有个好处，就是有多种enumerator可供使用。可以用`[anArray reverseObjectEnumerator]`来反向遍历collection中的元素。
+
+#### 快速遍历
+OC 2.0引入了快速遍历这一功能。它为for循环开设了in关键字。这个关键字大幅简化了遍历collection所需的语法：
+
+    NSArry* anArray = ...;
+    for (id object in anArray) {
+      // do sth
+    }
+由于NSEnumerator对象也实现了`NSFastEnumeration`协议，所以能用来执行反向遍历。
+
+    NSArry* anArray = ...;
+    for (id object in [anArray reverseObjectEnumeration]) {
+      // do sth
+    }
+这种办法是语法最简单且效率最高的。与传统的for循环不同，这种方法无法轻松获取当前遍历操作所针对的下标。
+
+#### 基于block的遍历方式
+在当前的OC中，最新的一种做法就是基于block来遍历。
+
+    - (void)enumerateObjectsUsingBlock:(void(^)(id object, NSUInteger idx, BOOL* stop))block
+    - (void)enumerateObjectsUsingBlock:(void (^)(ObjectType obj, BOOL *stop))block
+    - (void)enumerateKeysAndObjectsUsingBlock:(void (^)(KeyType key, ObjectType obj, BOOL *stop))block
+    
+此方法大大胜过其他方法的地方在于，遍历时可以直接从block获取更多信息。在遍历数组时，可以知道当前所针对的下标。而在遍历字典时，可以同时获取键和值，从而省去了根据给定key获取value这一步。  
+用此方法可以执行反向遍历。可向其中传入“选项掩码”（option mask）：
+
+    - (void)enumerateObjectsWithOptions:(NSEnumerationOptions)opts usingBlock:(void (^)(ObjectType obj, NSUInteger idx, BOOL *stop))block
+    - (void)enumerateObjectsWithOptions:(NSEnumerationOptions)opts usingBlock:(void (^)(ObjectType obj, BOOL *stop))block
+    - (void)enumerateKeysAndObjectsWithOptions:(NSEnumerationOptions)opts usingBlock:(void (^)(KeyType key, ObjectType obj, BOOL *stop))block
+    
+    typedef NS_OPTIONS(NSUInteger, NSEnumerationOptions) {
+      NSEnumerationConcurrent = (1UL << 0),
+      NSEnumerationReverse = (1UL << 1),
+    };
+    
+### 第49条：对自定义其内存管理语义的collection使用无缝桥接
