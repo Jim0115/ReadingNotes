@@ -848,3 +848,28 @@ OC 2.0引入了快速遍历这一功能。它为for循环开设了in关键字。
     };
     
 ### 第49条：对自定义其内存管理语义的collection使用无缝桥接
+OC的系统库包含相当多的collection类，其中有各种数组、各种字典、各种set。Foundation框架定义了这些collection及其他各种collection所对应的OC类。与之相似，CF框架也定义了一套C语言API，用于操作这些collection及其他collection的数据结构。`NSArray`时Foundation框架中的数组类，而`CFArray`则是CF框架中的等价物。这两种创建数组的方式也许有区别，然而有一项强大的功能可在这两个类型间平滑转换，它就是“无缝桥接”（toll-free bridging）。  
+C语言级别的数据结构和OC中的类或对象并不相同。例如，`CFArray`要通过`CFArrayRef`来引用，而这是指向`struct__CFArray`的指针。`CFArrayGetCount`这种函数则可以操作此struct，获得数组大小。这和OC中的对应物不同。在OC中，可以创建NSArray对象，并在其上调用`count`方法，以获取数组大小。  
+
+    NSArray* anNSArray = @[@1, @2, @3, @4, @5];
+    CFArrayRef aCFArray = (__bridge CFArrayRef)(anNSArray);
+    NSLog(@"size of array = %ld", CFArrayGetCount(aCFArray));
+    // size of array = 5
+    
+转换操作中的`__bridge`告诉ARC，如何处理转换所涉及的OC对象。`__bridge`的意思是，ARC本身仍具备这个OC对象的所有权。`__bridge_retained`则与之相反，意味着ARC将交出对象的所有权。
+
+    NSArray* anNSArray = @[@1, @2, @3, @4, @5];
+    CFArrayRef aCFArray = (__bridge_retained CFArrayRef)(anNSArray);
+    NSLog(@"size of array = %ld", CFArrayGetCount(aCFArray));
+    CFRelease(aCFArray);
+
+与之相似，反向转换可以通过`__bridge_transfer`来实现。比方说，想把CFArrayRef转换成NSArray*，并且想令ARC获得对象所有权，那么就可以采用此种转换方式。  
+为何要用到这种功能呢？Foundation框架中的OC类所具备的某些功能，是CF框架中的C语言数据结构所不具备的，反之亦然。在使用Foundation框架中的字典对象时会遇到一个大问题，就是其键的内存管理语义为copy，而值的语义却是retain。除非使用无缝桥接，否则无法改变其语义。  
+CF框架中的字典类型叫做CFDictionary。其可变版本成为CFMutableDictionary。创建CFMutableDictionary时，可以通过下列方法改变key和value的内存管理语义：
+
+    CFMutableDictionary
+    
+### 第50条：构建缓存时选用NSCache而非NSDictionary
+开发应用时，经常遇到的一个问题是，下载的图片应该如何缓存。首先想到的办法就是把内存中的图片保存到字典里，这样的话，稍后使用就无须再次下载了。相比于NSDictionary，NSCache类更好，它是Foundation框架专为处理这种任务而设计的。  
+NSCache胜过NSDictionary之处在于，当系统资源将要耗尽时，它可以自动删减缓存。此外，NSCache还会先行删减“最久未使用的”（lease recently used）对象。若想自己编写代码来为字典添加此功能，则会十分复杂。  
+NSCache不会“拷贝”key，而是“保留”它。NSCache对象不拷贝键的原因在于：很多时候，键都是由不支持copy的对象来充当的。另外，NSCache是线程安全的。即：在不编写加锁代码的情况下，多个线程便可以同时访问NSCache。
