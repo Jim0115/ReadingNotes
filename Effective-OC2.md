@@ -875,3 +875,18 @@ NSCache胜过NSDictionary之处在于，当系统资源将要耗尽时，它可�
 NSCache不会“拷贝”key，而是“保留”它。NSCache对象不拷贝键的原因在于：很多时候，键都是由不支持copy的对象来充当的。另外，NSCache是线程安全的。即：在不编写加锁代码的情况下，多个线程便可以同时访问NSCache。  
 开发者可以操控缓存删减其内容的时机。有两个尺度可供调整，其一是缓存中的对象总数，其二是所有对象的“总开销”（overall cost）。开发者在将对象加入缓存时，可为其指定“开销值”。当对象总数或总开销超过上限时，缓存就可能会删减其中的对象，在系统资源紧张时也会这么做。然而，“可能”会删减某个对象，并不意味着“一定”会删减这个对象。删减对象时所遵照的顺序，由具体实现来定。这说明，想通过调整“开销值”迫使缓存优先删除某对象，不是个好主意。  
 向缓存中添加对象时，只有在能很快计算出“开销值”的情况下，才应该考虑采用这个尺度。
+
+    @implementation EOCClass {
+      NSCache* _cache;
+    }
+    
+    - (instancetype)init {
+      if (self = [super init]) {
+        _cache = [NSCache new];
+        
+        _cache.countLimit = 100;
+        
+        _cache.totalCostLimit = 5 << 10 << 10;
+      }
+      return self;
+    }
