@@ -881,7 +881,7 @@ NSCache不会“拷贝”key，而是“保留”它。NSCache对象不拷贝键
     }
     
     - (instancetype)init {
-      if (self = [super init]) {
+      if (self = [supaer init]) {
         _cache = [NSCache new];
         
         _cache.countLimit = 100;
@@ -890,3 +890,51 @@ NSCache不会“拷贝”key，而是“保留”它。NSCache对象不拷贝键
       }
       return self;
     }
+    
+    - (void)downloadDataForURL:(NSURL *)url {
+      NSData* cachedData = [_cache objectForKey:url];
+      if (cachedData) {
+        // cache hit
+        // [self useData:cachedData];
+      } else {
+        // cache miss
+        EOCNetworkFetcher* fetcher = [[EOCNetworkFetcher alloc] initWithURL:url];
+        [fetcher startWithCompletionHandler:^(NSData *data) {
+          [_cache setObject:data forKey:url cost:data.length];
+          // [self useData:cachedData];
+        }];
+      }
+    }
+    
+    @end
+    
+下载数据所用的URL，就是缓存的key。若缓存未命中（cache miss），则下载数据并将其放入缓存。而数据的“开销值”则设为其长度。创建NSCache时，则其中可缓存的总对象数目上限设为100，将“总开销”上限设为5MB。不过，由于“开销值”以“字节”为单位，所以要将MB转换为B。  
+还有个类叫做`NSPurgeableData`，和`NSCache`搭配起来用，效果很好。此类是`NSMutableData`的子类，而且实现了`NSDiscardableContent`协议。如果某个对象所占的内存能够根据需要随时丢弃，那么就可以实现该协议所定义的接口。也就是说，当系统资源紧张是，可以把保存`NSPurgeableData`对象的那块内存释放掉。  
+如果需要访问某个`NSPurgeableData`对象，可以调用其`beginContentAccess`方法，告诉它现在还不应丢弃自己所占据的内存。用完之后，调用`endContentAccess`方法，告诉它可以在必要时丢弃自己所占据的内存。这些调用可以嵌套，类似于引用计数。  
+如果将`NSPurgeable`对象加入`NSCache`，那么当该对象为系统所丢弃时，也会自动从缓存中移除。通过`NSCache`的`evictsObjectsWithDiscardedContent`属性，可以开启或关闭此功能。
+
+    - (void)downloadDataForURL:(NSURL *)url {
+      NSPurgeableData* cachedData = [_cache objectForKey:url];
+      if (cachedData) {
+        // cache hit
+        
+        [cachedData beginContentAccess];
+        
+        // [self useData:cachedData];
+        
+        [cachedData endContentAccess];
+      } else {
+        // cache miss
+        EOCNetworkFetcher* fetcher = [[EOCNetworkFetcher alloc] initWithURL:url];
+        [fetcher startWithCompletionHandler:^(NSData *data) {
+          NSPurgeableData* purgeableData = [NSPurgeableData dataWithData:data];
+          
+          [_cache setObject:purgeableData forKey:url cost:purgeableData.length];
+          
+          // [self useData:data];
+          
+          [purgeableData endContentAccess];
+        }];
+      }
+    }
+创建好`NSPurgeableData`对象后，其“purge计数”会多1，所以无须调用`beginContentAccess`，但在使用结束后要调用`endContentAccess`，抵消多出的这个1。
