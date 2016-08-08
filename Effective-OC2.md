@@ -938,3 +938,40 @@ NSCache不会“拷贝”key，而是“保留”它。NSCache对象不拷贝键
       }
     }
 创建好`NSPurgeableData`对象后，其“purge计数”会多1，所以无须调用`beginContentAccess`，但在使用结束后要调用`endContentAccess`，抵消多出的这个1。
+
+### 第51条：精简initialize和load的实现代码
+有时候，类必须先执行某些初始化操作，然后才能正常使用。在OC中，绝大多数类都继承自NSObject这个父类，而该类有两个方法，可用来实现这种初始化操作。
+
+    + (void)load
+对于每个加入运行期系统的类和category来说，必定会调用此方法，而且仅调用一次。当包含类或category的程序库载入系统时，就会执行此方法。对iOS而言，通常就是应用启动的时候。如果category和其所属的类都定义了load方法，则先调用类里的，在调用category里的。  
+`load`的问题在于，执行该方法时，运行期系统处于“脆弱状态”（fragile state）。在执行子类的load方法之前，必然会执行所有父类的load方法，而如果代码还依赖了其他程序库，那么程序库里相关类的load方法也必定会先执行。然而，根据某个给定的程序库，却无法判断出其中各个类的载入顺序。因此，在load类中使用其他类是不安全的。  
+load方法并不想普通的方法一样，他不遵从那套继承规则。如果某个类本身没实现load方法，那么不管其各级父类是否实现此方法，都不会被调用。此外，类和category中都可能出现load代码，两种实现都会被调用，且类中的实现先执行。  
+另一个方法是`initialize`方法
+
+    + (void)initialize
+    
+对于每个类来说，该方法会在程序首次使用该类之前调用，且只调用一次。其与load方法有几点区别。第一，它是“惰性调用的”，也就是说，只有当系统用到相关的类时，才会被系统调用。  
+另外，运行期系统在执行该方法时，时处于正常状态的。因此，此时可以安全使用任意类中的任意方法。而且，运行期系统也能确保`initialize`方法一定在线程安全环境中执行。即，只有执行`initialize`的那个线程可以操作类或类实例。其他线程都要先阻塞，等着`initialize`执行完。  
+最后，如果某个类未实现`initialize`方法，就会运行其父类的实现。
+
+    @import Foundation;
+    
+    @interface EOCBaseClass : NSObject
+    @end
+    
+    @implementation EOCBaseClass
+    + (void)initialize {
+      NSLog(@"%@ initialize", self);
+    }
+    @end
+    
+    @interface EOCSubClass : EOCBaseClass
+    @end
+    
+    @implementation EOCSubClass
+    @end
+    
+首次使用`EOCSubClass`时，控制台输出：
+
+    EOCBaseClass initialize
+    EOCSubClass initialize
