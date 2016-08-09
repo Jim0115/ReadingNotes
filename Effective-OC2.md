@@ -975,3 +975,68 @@ load方法并不想普通的方法一样，他不遵从那套继承规则。如�
 
     EOCBaseClass initialize
     EOCSubClass initialize
+    
+这两个方法的实现代码要尽量精简。在里面设置一些状态，使本类能够正常运作就可以了，不要执行那种耗时太久或需要加锁的任务。对于某个类来说，任何线程都可能成为初次用到它的那个线程，并导致其初始化。如果这个线程碰巧是主线程，那么初始化期间就会一直阻塞，导致应用程序无响应。很难预测是那个线程会最先用到这个类。  
+第二，开发者无法控制类的初始化时机。类在使用前，肯定要初始化，但编写程序时不能令代码依赖特定的时间点，否则会很危险。  
+最后，如果某个类的实现代码很复杂，那么其中可能会直接或间接使用到其他类。如果那些类尚未初始化，则系统会强迫其初始化。然而，本类的初始化方法此时尚未运行完毕。其他类在运行其initialize方法时，有可能会依赖本类中的某些数据，而这些数据此时尚未初始化好。  
+
+    #import <Foundation/Foundation.h>
+    
+    static id EOCClassAInternalData;
+    @interface EOCClassA : NSObject
+    @end
+    
+    static EOCClassBInternalData;
+    @interface EOCClassB : NSObject
+    @end
+    
+    @implementation EOCClassA 
+    
+    + (void)initialize {
+      if (self == [EOCClassA class]) {
+        [EOCClassB doSthWithInternalData];
+        EOCClassAInternalData = [self setupInternalData];
+      }
+    }
+    
+    @end
+    
+    @implementation EOCClassB
+    
+    + (void)initialize {
+      if (self == [EOCClassB class]) {
+        [EOCClassB doSthWithInternalData];
+        EOCClassBInternalData = [self setupInternalData];
+      }
+    }
+    
+    @end
+    
+若是ClassA先初始化，那么ClassB随后也会初始化，它会在自己的初始化方法中调用ClassA的`doSthWithInternalData`，而此时ClassA内部的数据还没准备好。  
+所以说，initialize方法只应该设置内部数据。不应该在其中调用任何方法，即使是本类自己的方法。若某个全局状态无法在编译期初始化，则可以放在initialize里来做。  
+
+    //EOCClass.h
+    #import <Foundation/Foundation.h>
+    
+    @interface EOCClass : NSObject
+    @end
+    
+    
+    //EOCClass.m
+    #import "EOCClass.h"
+    
+    static const int kInterval = 10;
+    static NSMutableArray* kSomeObject;
+    
+    @implementation EOCClass
+    
+    + (void)initialize {
+      if (self == [EOCClass class]) {
+        kSomeObject = [NSMutableArray arrayWithObjects:@1, @2, nil];
+      }
+    }
+    
+    @end
+整数可以在编译期定义，然而可变数组不行，因为它是个OC对象，所以创建实例之前必须先激活运行期系统。某些OC对象也可以在编译期创建，例如NSString实例。
+
+### 第52条：别忘了NSTimer会保留目标对象
