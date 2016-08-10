@@ -1042,4 +1042,45 @@ load方法并不想普通的方法一样，他不遵从那套继承规则。如�
 ### 第52条：别忘了NSTimer会保留目标对象
 计时器是一种很方便也很有用的对象。Foundation框架中有个类叫做`NSTimer`，开发者可以指定相对或决定时间，用以到时执行任务。也可以以一定间隔重复执行任务。  
 timer要和runloop相关联，运行runloop时会触发任务。创建NSTimer时，可以将其安排在当前的runloop中，也可以先创建好，然后自己调度。无论采用哪种方法，timer必须放在runloop中才能正常触发任务。  
-由于timer会保留目标对象，所以反复执行任务通常会导致应用程序出问题。也就是说，很容易产生循环引用。
+由于timer会保留目标对象，所以反复执行任务通常会导致应用程序出问题。也就是说，很容易产生循环引用。  
+
+    // EOCClass.h
+    #import <Foundation/Foundation.h>
+    
+    @interface EOCClass : NSObject
+    
+    - (void)startPolling;
+    - (void)stopPolling;
+    
+    @end
+    
+    
+    // EOCClass.m
+    
+    @implementation EOCClass {
+      NSTimer* _poolTimer;
+    }
+    
+    - (void)startPolling {
+      _poolTimer = [NSTimer scheduledTimerWithTimeInterval:5
+                                                    target:self
+                                                  selector:@selector(p_doPoll)
+                                                  userInfo:nil
+                                                   repeats:YES];
+    }
+    
+    - (void)p_doPoll {
+      
+    }
+    
+    - (void)stopPolling {
+      [_poolTimer invalidate];
+      _poolTimer = nil;
+    }
+    
+    - (void)dealloc {
+      [_poolTimer invalidate];
+    }
+    
+    
+    @end
