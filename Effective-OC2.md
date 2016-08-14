@@ -1086,4 +1086,47 @@ timer要和runloop相关联，运行runloop时会触发任务。创建NSTimer时
     @end
     
 若创建本类的实例，并调用其`startPolling`方法。则实例的timer会保留self，这样就形成了循环引用。要想打破保留环，只能改变实例或令timer无效。如果想在系统回收本类实例的过程中令timer无效，这也是不行的。因为在timer对象有效时，本类对象的保留计数绝不会为0，因此系统也就绝不会将其回收。  
-单从timer入手，很难解决这个问题。可以要求外界在释放最后一个引用之前，必须先调用`stopPolling`方法，但这种情况无法通过代码检测出来。此外，无法保证使用者一定会调用此方法。
+单从timer入手，很难解决这个问题。可以要求外界在释放最后一个引用之前，必须先调用`stopPolling`方法，但这种情况无法通过代码检测出来。此外，无法保证使用者一定会调用此方法。  
+使用block可以解决这个问题：
+
+    @interface NSTimer (EOCBlockSupport)
+    
+    + (NSTimer *)eoc_scheduledTimerWithTimeInterval:(NSTimeInterval)ti
+                                              block:(void(^)())block
+                                             repeat:(BOOL)repeat;
+    
+    
+    @end
+    
+    @implementation NSTimer (EOCBlockSupport)
+    
+    + (NSTimer *)eoc_scheduledTimerWithTimeInterval:(NSTimeInterval)ti block:(void (^)())block repeat:(BOOL)repeat {
+      return [NSTimer scheduledTimerWithTimeInterval:ti
+                                              target:self
+                                            selector:@selector(eoc_blockInvoke:)
+                                            userInfo:[block copy]
+                                             repeats:repeat];
+    }
+    
+    + (void)eoc_blockInvoke:(NSTimer *)timer {
+      void (^block)() = timer.userInfo;
+      if (block) {
+        block();
+      }
+    }
+    
+    @end
+    
+    // EOCClass.m
+    
+    - (void)startPolling {
+      __weak typeof(self) weakSelf = self;
+      _poolTimer = [NSTimer eoc_scheduledTimerWithTimeInterval:1
+                                                         block:^{
+                                                           __strong typeof(weakSelf) strongSelf = weakSelf;
+                                                           [strongSelf p_doPoll];
+                                                         }
+                                                        repeat:YES];
+    }
+    
+    
