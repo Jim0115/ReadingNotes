@@ -125,7 +125,19 @@ view所在的window，为nil表示view还未被添加到window或其子视图中
 判断view是否为当前view的后代。
 
 ### Configuring the Resizing Behavior  
-`var autoresizingMask: UIViewAutoresizing`
+`var autoresizingMask: UIViewAutoresizing`  
+位掩码，决定当父视图bounds改变时视图如何改变其自身大小
+
+    struct UIViewAutoresizing : OptionSetType {
+        init(rawValue rawValue: UInt)
+        static var None: UIViewAutoresizing { get }
+        static var FlexibleLeftMargin: UIViewAutoresizing { get }
+        static var FlexibleWidth: UIViewAutoresizing { get }
+        static var FlexibleRightMargin: UIViewAutoresizing { get }
+        static var FlexibleTopMargin: UIViewAutoresizing { get }
+        static var FlexibleHeight: UIViewAutoresizing { get }
+        static var FlexibleBottomMargin: UIViewAutoresizing { get }
+    }
 
 ---
 ### CGAffineTransform 仿射变换
