@@ -139,6 +139,49 @@ view所在的window，为nil表示view还未被添加到window或其子视图中
         static var FlexibleBottomMargin: UIViewAutoresizing { get }
     }
 
+UIViewAutoresizingFlexibleLeftMargin 自动调整与superView左边的距离，保证与superView右边的距离不变。  
+UIViewAutoresizingFlexibleRightMargin 自动调整与superView的右边距离，保证与superView左边的距离不变。  
+UIViewAutoresizingFlexibleTopMargin 自动调整与superView顶部的距离，保证与superView底部的距离不变。  
+UIViewAutoresizingFlexibleBottomMargin 自动调整与superView底部的距离，也就是说，与superView顶部的距离不变。  
+UIViewAutoresizingFlexibleWidth 自动调整自己的宽度，保证与superView左边和右边的距离不变。  
+UIViewAutoresizingFlexibleHeight 自动调整自己的高度，保证与superView顶部和底部的距离不变。  
+
+`var autoresizesSubviews: Bool`  
+当其bounds改变时，是否自动改变子视图大小。默认为true
+
+`var contentMode: UIViewContentMode`
+当视图bounds改变时如何布局其内容  
+
+    enum UIViewContentMode : Int {
+        case ScaleToFill
+        case ScaleAspectFit
+        case ScaleAspectFill
+        case Redraw
+        case Center
+        case Top
+        case Bottom
+        case Left
+        case Right
+        case TopLeft
+        case TopRight
+        case BottomLeft
+        case BottomRight
+    }
+使用此属性可以将视图内容固定在某个位置或随视图大小变化。默认为`ScaleToFill`
+
+`func sizeThatFits(_ size: CGSize) -> CGSize`  
+对于view，返回其`bounds.size`；对于label等有内容的view，返回其contentSize  
+
+`func sizeToFit()`  
+调整和移动view使其恰好围绕其子视图。大小为`sizeThatFits`方法的返回值。  
+此方法不应被override。若想调整大小，应该重写`sizeThatFits`方法。
+
+### Laying out Subviews
+`func layoutSubviews()`
+布局子视图  
+
+
+
 ---
 ### CGAffineTransform 仿射变换
 ![image](https://docs-assets.developer.apple.com/published/8a0bbde8e5/equation01_2x_fabc9070-1967-4d6f-a086-17ab5fcfef6d.png)  
