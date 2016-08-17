@@ -179,7 +179,21 @@ UIViewAutoresizingFlexibleHeight 自动调整自己的高度，保证与superVie
 ### Laying out Subviews
 `func layoutSubviews()`
 布局子视图  
+此方法不应该被直接调用。如果想强制布局更新，调用`setNeedsLayout`，优先在下次drawing时更新。如果想强制立刻更新布局，调用`layoutIfNeeded`方法。
 
+`func setNeedsLayout()`  
+使当前布局失效，在下次更新循环中触发布局更新。  
+在主线程调用此方法。
+
+`func layoutIfNeeded()`  
+立即对子视图进行布局。  
+此方法将会对以当前视图为根的所有视图树生效。
+
+`class func requiresConstraintBasedLayout() -> Bool`  
+表明当前视图是否依赖于基于约束的布局系统。  
+
+`var translatesAutoresizingMaskIntoConstraints: Bool`  
+view的autoresizing掩码是否被翻译为Auto Layout的约束。  
 
 
 ---
