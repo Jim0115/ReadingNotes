@@ -194,6 +194,57 @@ UIViewAutoresizingFlexibleHeight 自动调整自己的高度，保证与superVie
 
 `var translatesAutoresizingMaskIntoConstraints: Bool`  
 view的autoresizing掩码是否被翻译为Auto Layout的约束。  
+若此属性为true，系统会创建一个约束集合复制view的autoresizing mask的行为。这也允许通过修改view的`frame`, `bounds`和`center`确定view的位置和大小，在同时使用frame和Auto Layout。  
+注意autoresizing mask约束完全确定了view的大小和位置。因此，不能添加额外的约束去修改view的大小和位置，否则会产生冲突。如果想使用Auto Layout动态计算view的大小和位置，必须设置此属性为`false`。然后向view提供一套无冲突和歧义的约束。  
+通过代码创建的view此属性默认为`true`。IB中添加的view此属性默认为`false`。
+
+### Creating Constraints Using Layout Anchors
+iOS 9 新增的一种创建约束的方式。使用`NSLayoutAnchor`类下的`func constraintEqualToAnchor(_ anchor: NSLayoutAnchor!) -> NSLayoutConstraint!`方法创建约束。参数有：
+
+* bottomAnchor
+* centerXAnchor
+* centerYAnchor
+* firstBaselineAnchor
+* heightAnchor
+* lastBaselineAnchor
+* leadingAnchor
+* leftAnchor
+* rightAnchor
+* topAnchor
+* trailingAnchor
+* widthAnchor 
+        
+等价的两种方式：
+    
+    NSLayoutConstraint(item: subview,
+        attribute: .Leading,
+        relatedBy: .Equal,
+        toItem: view,
+        attribute: .LeadingMargin,
+        multiplier: 1.0,
+        constant: 0.0).active = true
+        
+    let margins = view.layoutMarginsGuide    
+    subview.leadingAnchor.constraintEqualToAnchor(margins.leadingAnchor).active = true
+    
+### Managing the View’s Constraints
+`var constraints: [NSLayoutConstraint] { get }`  
+被view持有的所有的约束
+
+`func addConstraint(_ constraint: NSLayoutConstraint)`  
+向view添加约束用于布局其自身或其subviews  
+传入的约束所包含的view，必须是此view或其subviews。添加的约束将被view持有。  
+在iOS 8之后，直接设置约束的`active`属性为true，而不是将其添加到view上。约束会自动添加到正确的view上。  
+
+`func addConstraints(_ constraints: [NSLayoutConstraint])`  
+向view添加一组约束。  
+在iOS 8 之后，使用 `NSLayoutConstraint` 的类方法 `activateConstraints:` 代替此方法。约束会自动呗添加到正确的view上。  
+
+`func removeConstraint(_ constraint: NSLayoutConstraint)`  
+`func removeConstraints(_ constraints: [NSLayoutConstraint])`  
+同上，直接设置约束的`active`属性为false。使用 `NSLayoutConstraint` 的类方法 `deactivateConstraints:` 代替。约束会被自动移除。  
+
+### Working with Layout Guides
 
 
 ---
