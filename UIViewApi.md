@@ -245,6 +245,30 @@ iOS 9 新增的一种创建约束的方式。使用`NSLayoutAnchor`类下的`fun
 同上，直接设置约束的`active`属性为false。使用 `NSLayoutConstraint` 的类方法 `deactivateConstraints:` 代替。约束会被自动移除。  
 
 ### Working with Layout Guides
+`func addLayoutGuide(_ layoutGuide: UILayoutGuide)`  
+向view添加一个指定的layout guide。  
+将一个layout guide添加到view的`layoutGuides`数组中。同时也会设置guide的`owningView`属性为当前view。  
+
+`var layoutGuides: [UILayoutGuide] { get }`  
+返回view持有的所有layout guide对象。
+
+`var layoutMarginsGuide: UILayoutGuide { get }`  
+一个代表view的margins的layout guide。  
+使用此属性的anchor创建基于margin的约束。  
+
+`var readableContentGuide: UILayoutGuide { get }`  
+一个代表view的readable部分的layout guide。  
+1. readable content guide不会超过view的layout margin guide  
+2. readable content guide在view的layout margin guide中垂直居中  
+3. readable content guide的宽度小于等于给予当前动态字体大小的readable width。
+
+`func removeLayoutGuide(_ layoutGuide: UILayoutGuide)`  
+从一个view中移除某个layout guide。将这个layout guide的`owningView`属性设为nil。同时将移除包含这个layout guide 的所有约束。  
+除非被加入视图结构的某个视图中，否则layout guide不能在约束中被使用。  
+
+### Measuring in Auto Layout
+`func systemLayoutSizeFittingSize(_ targetSize: CGSize) -> CGSize`  
+
 
 
 ---
