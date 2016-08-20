@@ -268,7 +268,29 @@ iOS 9 新增的一种创建约束的方式。使用`NSLayoutAnchor`类下的`fun
 
 ### Measuring in Auto Layout
 `func systemLayoutSizeFittingSize(_ targetSize: CGSize) -> CGSize`  
+返回满足view所持有的所有约束的size。
 
+`func intrinsicContentSize() -> CGSize`  
+返回view的自然大小，只考虑其自身的属性。  
+
+`func invalidateIntrinsicContentSize()`  
+使view自身的content size失效。  
+当view的内容变化时，调用此方法使其自身的content size失效。将会允许基于约束的布局系统为其生成一个新的content size。
+
+`func contentCompressionResistancePriorityForAxis(_ axis: UILayoutConstraintAxis) -> UILayoutPriority`  
+返回view在指定方向上的抗压缩优先级。优先级越高，越优先满足其content size。
+
+`func setContentCompressionResistancePriority(_ priority: UILayoutPriority, forAxis axis: UILayoutConstraintAxis)`  
+设置view的抗压缩优先级。
+
+`func contentHuggingPriorityForAxis(_ axis: UILayoutConstraintAxis) -> UILayoutPriority`  
+返回view在指定方向上的抗拉伸优先级。
+
+`func setContentHuggingPriority(_ priority: UILayoutPriority, forAxis axis: UILayoutConstraintAxis)`  
+设置view的抗拉伸优先级。
+
+### Aligning Views in Auto Layout
+`func alignmentRectForFrame(_ frame: CGRect) -> CGRect`  
 
 
 ---
