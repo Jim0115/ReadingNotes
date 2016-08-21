@@ -291,6 +291,14 @@ iOS 9 新增的一种创建约束的方式。使用`NSLayoutAnchor`类下的`fun
 
 ### Aligning Views in Auto Layout
 `func alignmentRectForFrame(_ frame: CGRect) -> CGRect`  
+返回view用于对齐的矩形。  
+基于约束的布局系统使用alignment rectangles来对齐views，而不是使用frame。自定义视图允许基于其内容的位置对齐，同时仍保留frame包含其内容的装饰，例如阴影等。  
+默认实现返回被view的`alignmentRectInsets`修改过的frame。自定义view可以重写`alignmentRectInsets`方法指定content在frame中的位置。自定义view需要主观的变化，可以重写`alignmentRectForFrame:` 和 `frameForAlignmentRect:`方法来指定其content的位置。这两个方法必须总是互逆的。
+
+`func frameForAlignmentRect(_ alignmentRect: CGRect) -> CGRect`  
+与上一个方法相反，返回view的frame。
+
+`func alignmentRectInsets() -> UIEdgeInsets`  
 
 
 ---
