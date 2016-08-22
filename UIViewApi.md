@@ -299,7 +299,18 @@ iOS 9 新增的一种创建约束的方式。使用`NSLayoutAnchor`类下的`fun
 与上一个方法相反，返回view的frame。
 
 `func alignmentRectInsets() -> UIEdgeInsets`  
+返回view的frame与其content间的长度。  
+默认返回`UIEdgeInsetsZero`。通过重写此方法返回Insets可以使布局系统使用基于view的content对齐，而不是使用其frame。
 
+`var viewForFirstBaselineLayout: UIView { get }`  
+`var viewForLastBaselineLayout: UIView { get }`  
+返回一个view用于满足first baseline 或 last baseline 的约束。  
+对于自定义视图，如果想对其first baseline添加约束，则需要重写此方法返回其对应的view。  
+first baseline view 默认返回 last baseline view。所以若二者为同一view，只需要重写last方法即可。 
+
+### Triggering Auto Layout
+`func needsUpdateConstraints() -> Bool`  
+view的约束是否需要更新。
 
 ---
 ### CGAffineTransform 仿射变换
