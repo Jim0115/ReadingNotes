@@ -312,6 +312,16 @@ first baseline view 默认返回 last baseline view。所以若二者为同一vi
 `func needsUpdateConstraints() -> Bool`  
 view的约束是否需要更新。
 
+`func setNeedsUpdateConstraints()`  
+控制view的约束是否需要更新。  
+当自定义视图中的某个属性的改变会影响约束时，可以调用此方法指示约束需要在将来的某个时间点更新。系统将会调用`updateConstraints`方法。使用此方法作为最佳工具批量处理约束的变化。
+
+`func updateConstraints()`  
+更新view的约束。  
+重写此方法调整约束的变化。   
+只有两种情况需要重写此方法：1. 在适当的地方改变约束太慢；2. view将产生大量重复的变化。  
+
+
 ---
 ### CGAffineTransform 仿射变换
 ![image](https://docs-assets.developer.apple.com/published/8a0bbde8e5/equation01_2x_fabc9070-1967-4d6f-a086-17ab5fcfef6d.png)  
