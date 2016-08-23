@@ -320,6 +320,30 @@ view的约束是否需要更新。
 更新view的约束。  
 重写此方法调整约束的变化。   
 只有两种情况需要重写此方法：1. 在适当的地方改变约束太慢；2. view将产生大量重复的变化。  
+调用`setNeedsUpdateConstraints`方法计划change。系统将会在布局发生前调用你对`updateConstraints`方法的实现。确认所有对内容必须的约束处于合适的地方。  
+对此方法的实现必须尽可能效率高。不要在其中禁用所有约束然后重新启用需要的约束。相反，app必须有一些方法追踪约束。只有需要变化的item需要被改变。  
+不要在实现中调用`setNeedsUpdateConstraints`方法。  
+在方法的最后调用`super.updateConstraints`。  
+
+`func updateConstraintsIfNeeded()`  
+要求view更新其和其subviews的约束。  
+当view出发了一个新的layout pass，系统调用此方法确保当前view和其subviews的约束都更新到最新。此方法会被系统自动调用。也可以手动调用用以检查约束是否为最新。  
+子类不应重写此方法。  
+
+### Debugging Auto Layout
+`func constraintsAffectingLayoutForAxis(_ axis: UILayoutConstraintAxis) -> [NSLayoutConstraint]`  
+返回在给定方向上作用于布局的约束。  
+此方法只能被用于debug。
+
+`func hasAmbiguousLayout() -> Bool`  
+对view的布局产生影响约束是否不够确定view的位置。  
+此方法检查是否还有view的其他frame也能满足view的约束。检查开销很大但在debug时很有用。  
+此方法只能被用于debug。
+
+`func exerciseAmbiguityInLayout()`  
+在一个有歧义布局的所有有效值中随机变换view的frame。  
+此方法只能被用于debug。  
+
 
 
 ---
