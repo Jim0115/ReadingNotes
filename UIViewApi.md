@@ -344,7 +344,42 @@ view的约束是否需要更新。
 在一个有歧义布局的所有有效值中随机变换view的frame。  
 此方法只能被用于debug。  
 
+### Managing the User Interface Direction
+`var semanticContentAttribute: UISemanticContentAttribute`  
+对view内容的语义描述，用于决定view在从左到右或从右到左的布局中是否需要翻转。  
 
+    enum UISemanticContentAttribute : Int {
+      case Unspecified // default. will filp
+      case Playback // for playback controls. will not flip
+      case Spatial // will not flip
+      case ForceLeftToRight 
+      case ForceRightToLeft
+    }
+
+`class func userInterfaceLayoutDirectionForSemanticContentAttribute(_ attribute: UISemanticContentAttribute) -> UIUserInterfaceLayoutDirection`  
+返回此view在特定语义内容下的方向。
+
+    enum UIUserInterfaceLayoutDirection : Int {
+      case LeftToRight
+      case RightToLeft
+    }
+
+### Configuring Content Margins
+`var layoutMargins: UIEdgeInsets`  
+指定view的边界与其subview的空间大小。  
+默认值为每个方向8 points。  
+View controller的root view，会由系统管理margin。上下0 points。左右为16或20 points，取决于当前的size class。此时margin不可被更改。
+
+`var preservesSuperviewLayoutMargins: Bool`  
+当前view是否同样考虑其superview的margins。  
+eg. 某个view的frame等于其superview的bounds。而其content恰好填满其bounds。若此view启用此选项，则会压缩其content，保证不会遮挡其superview的margin。  
+默认为false。
+
+### Drawing and Updating the View
+`func drawRect(_ rect: CGRect)`  
+根据传入的rect绘制view。  
+参数rect：view需要更新的部分。view第一次被绘制时，rect通常是view整个可见的bounds。在之后的绘制操作中，rect可能只是view的一部分。  
+此方法的默认实现为空。使用Core Graphics和UIKit技术的子类重写此方法，在其中实现绘制代码。
 
 ---
 ### CGAffineTransform 仿射变换
