@@ -375,11 +375,43 @@ View controller的root view，会由系统管理margin。上下0 points。左右
 eg. 某个view的frame等于其superview的bounds。而其content恰好填满其bounds。若此view启用此选项，则会压缩其content，保证不会遮挡其superview的margin。  
 默认为false。
 
+`func layoutMarginsDidChange()`  
+提醒view其layout margins变化。  
+默认为空实现。子类可以重写此方法，当view的`layoutMargins`属性变化时，此方法将被系统调用。
+
 ### Drawing and Updating the View
 `func drawRect(_ rect: CGRect)`  
 根据传入的rect绘制view。  
 参数rect：view需要更新的部分。view第一次被绘制时，rect通常是view整个可见的bounds。在之后的绘制操作中，rect可能只是view的一部分。  
-此方法的默认实现为空。使用Core Graphics和UIKit技术的子类重写此方法，在其中实现绘制代码。
+此方法的默认实现为空。使用Core Graphics和UIKit技术的子类重写此方法，在其中实现绘制代码。  
+此方法被调用时，UIKit已经为view配置好绘制环境，此时可以调用任何用于渲染内容的绘制方法。此外，UIKit为绘制创建和配置graphics context，同时转换context的origin使其和view的bounds的origin相同。使用`UIGraphicsGetCurrentContext()`方法可以获得此时的graphics context，但不要强引用它，因为每次调用`drawRect:`方法时它都会变化。  
+所有的绘制都应该被限制在`rect`参数指定的矩形范围内。同时，如果view的`opaque`属性为true，在`drawRect:`方法的实现中必须使用不透明内容完全填满`rect`。  
+如果直接继承自`UIView`，不需要调用super的方法。如果继承自其他view，是否调用super需要视情况而定。  
+此方法当view第一次呈现或一些事件发生使view的一部分不可见时调用。不应该直接调用此方法。如果需要重新绘制，调用`setNeedDisplay`或`setNeedsDisplayInRect:`。
+
+`func setNeedsDisplay()`  
+将view的整个bounds标记为需要重绘。  
+用此方法提醒系统view的内容需要被重绘。view将会在下次drawing cycle被重绘。  
+只应该当view的内容变化时调用此方法重绘view。如果只是简单改变了view的大小和位置，view通常不会被重绘。已存在的内容将会根据view的`contentMode`属性进行调整。
+
+`func setNeedsDisplayInRect(_ rect: CGRect)`  
+标记view的一部分需要重绘。  
+
+`var contentScaleFactor: CGFloat`  
+被view使用的缩放比例。  
+
+`func tintColorDidChange()`  
+系统在view的`tintColor`属性变化时调用此方法。包括view继承自父视图的tintColor。  
+在你的实现中，根据需要改变view的渲染方式。
+
+### Formatting Printed View Content
+`func viewPrintFormatter() -> UIViewPrintFormatter`  
+`func drawRect(_ rect: CGRect, forViewPrintFormatter formatter: UIViewPrintFormatter)`
+
+### Managing Gesture Recognizers
+`func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer)`  
+向view添加一个gesture recognizer。  
+
 
 ---
 ### CGAffineTransform 仿射变换
