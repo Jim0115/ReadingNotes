@@ -426,6 +426,33 @@ view上所有gesture recognizer。如果没有，返回一个空数组。
 默认实现返回true。
 
 ### Animating Views with Block Objects
+`class func animateWithDuration(_ duration: NSTimeInterval, delay delay: NSTimeInterval, options options: UIViewAnimationOptions, animations animations: () -> Void, completion completion: ((Bool) -> Void)?)`  
+    
+* `duration`: 动画持续时间
+* `delay`: 动画开始前的延迟时间
+* `option`: 动画的可选项
+* `animations`: 一个包含需要执行动画的block。在其中更改view中可动画化的属性。
+* `completion`: 当动画结束后执行的block。参数代表此block被调用时动画是否执行完毕。
+
+`class func transitionWithView(_ view: UIView, duration duration: NSTimeInterval, options options: UIViewAnimationOptions, animations animations: (() -> Void)?, completion completion: ((Bool) -> Void)?)`  
+创建一个指定view的过渡动画。  
+* `view`：执行过渡动画的view
+* `duration`：动画持续的时间
+* `option`：动画的可选项
+* `animations`：包含指定变化的block
+* `completion`：动画结束后被调用的block
+ 
+`class func transitionFromView(_ fromView: UIView, toView toView: UIView, duration duration: NSTimeInterval, options options: UIViewAnimationOptions, completion completion: ((Bool) -> Void)?)`
+创建从一个view到另一个view的过渡动画。  
+
+* `fromView`：过渡动画的起始view。默认情况，此view将被从其superview中移除。
+* `toView`：过渡动画的结束view。默认情况：此view将被添加到`fromView`的superview中。
+* `duration`：动画持续的时间
+* `options`：动画的可选项
+* `completion`：动画结束后被调用的block
+
+此方法提供了一种将一个view替换成另一个view的简单方法。
+
 
 ---
 ### CGAffineTransform 仿射变换
