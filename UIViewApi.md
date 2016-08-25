@@ -411,7 +411,21 @@ eg. 某个view的frame等于其superview的bounds。而其content恰好填满其
 ### Managing Gesture Recognizers
 `func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer)`  
 向view添加一个gesture recognizer。  
+view和其所有subviews都会收到触摸事件。view对gesture recognizer强引用。
 
+`func removeGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer)`  
+将一个gesture recognizer从view上移除。
+
+`var gestureRecognizers: [UIGestureRecognizer]?`  
+view上所有gesture recognizer。如果没有，返回一个空数组。
+
+`func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool`  
+询问view，gesture recognizer是否被允许持续追踪触控事件。  
+返回true表示允许。false将导致gesture recognizer直接过渡到` UIGestureRecognizerStateFailed`状态。  
+此方法被调用时，gesture recognizer处于`UIGestureRecognizerStatePossible`状态，询问其是否能过渡到`UIGestureRecognizerStateBegan`状态。  
+默认实现返回true。
+
+### Animating Views with Block Objects
 
 ---
 ### CGAffineTransform 仿射变换
