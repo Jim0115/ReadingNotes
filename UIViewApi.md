@@ -451,7 +451,21 @@ view上所有gesture recognizer。如果没有，返回一个空数组。
 * `options`：动画的可选项
 * `completion`：动画结束后被调用的block
 
-此方法提供了一种将一个view替换成另一个view的简单方法。
+此方法提供了一种将一个view替换成另一个view的简单方法。默认，`toView`将替换掉`fromView`的视图层级。如果两个view都已经是视图层次的一部分，可以启用`UIViewAnimationOptionShowHideTransitionViews`选项，将替换操作改为隐藏。  
+此动画将立即执行，除非当前有正在执行的动画。
+
+`class func animateKeyframesWithDuration(_ duration: NSTimeInterval, delay delay: NSTimeInterval, options options: UIViewKeyframeAnimationOptions, animations animations: () -> Void, completion completion: ((Bool) -> Void)?)`  
+创建视图基于关键帧的动画。
+在`animation`block中，使用`UIView`的类方法`addKeyframeWithRelativeStartTime:relativeDuration:animations:`一次或多次添加关键帧。若不在其中添加关键帧，则此方法表现为和普通的动画方法相同。
+
+`class func addKeyframeWithRelativeStartTime(_ frameStartTime: Double, relativeDuration frameDuration: Double, animations animations: () -> Void)`  
+指定某个关键帧的时间、长度和操作。  
+
+* `frameStartTime`：帧开始时间。范围是0-1。0表示动画开始时，1表示动画结束时。
+* `frameDuration`：帧长度。范围和意义与上一参数相同。
+* `animations`：动画block
+
+
 
 
 ---
