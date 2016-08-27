@@ -465,8 +465,27 @@ view上所有gesture recognizer。如果没有，返回一个空数组。
 * `frameDuration`：帧长度。范围和意义与上一参数相同。
 * `animations`：动画block
 
+通过此方法在上一方法中添加关键帧，即可实现在指定时间产生指定长度的动画。
 
+`class func performSystemAnimation(_ animation: UISystemAnimation, onViews views: [UIView], options options: UIViewAnimationOptions, animations parallelAnimations: (() -> Void)?, completion completion: ((Bool) -> Void)?)`  
+执行指定系统动画，在执行系统动画的同时执行自定义动画。
 
+* `animation`：需要执行的系统动画。只有`Delete`一项，当动画完成时将view移除视图结构。
+* `views`：需要在其上执行动画的view
+* `options`：动画的可选项
+* `parallelAnimations`：在系统动画执行同时执行的动画，和系统动画有相同的启动时间和持续时间。在动画中，不要修改`views`参数数组中视图的属性。
+* `completion`：动画完成时调用的block。
+
+`class func animateWithDuration(_ duration: NSTimeInterval, delay delay: NSTimeInterval, usingSpringWithDamping dampingRatio: CGFloat, initialSpringVelocity velocity: CGFloat, options options: UIViewAnimationOptions, animations animations: () -> Void, completion completion: ((Bool) -> Void)?)`  
+执行一个动画，动画的时间曲线对应于物理弹跳。  
+
+* `duration`：动画持续时间
+* `delay`：动画开始前延迟时间
+* `dampingRatio`：接近静止状态的阻尼比率。平滑减速而没有摆动，使用1。越接近0的值摆动越强烈。
+* `velocity`：初始弹跳速度。1表示1秒完成一次动画的全程。如果整个动画需要移动200points，那么0.5表示初始速度为100pt/s。
+* `options`：动画的可选项。
+* `animations`：动画的block。不能为NULL
+* `completion`：动画结束时调用的block。
 
 ---
 ### CGAffineTransform 仿射变换
