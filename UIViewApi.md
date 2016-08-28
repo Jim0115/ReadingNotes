@@ -487,6 +487,14 @@ view上所有gesture recognizer。如果没有，返回一个空数组。
 * `animations`：动画的block。不能为NULL
 * `completion`：动画结束时调用的block。
 
+`class func performWithoutAnimation(_ actionsWithoutAnimation: () -> Void)`  
+禁用一个view的过渡动画。  
+
+### Using Motion Effects
+`func addMotionEffect(_ effect: UIMotionEffect)`  
+开始应用一个motion effect于view。  
+
+
 ---
 ### CGAffineTransform 仿射变换
 ![image](https://docs-assets.developer.apple.com/published/8a0bbde8e5/equation01_2x_fabc9070-1967-4d6f-a086-17ab5fcfef6d.png)  
