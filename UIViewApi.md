@@ -492,7 +492,17 @@ view上所有gesture recognizer。如果没有，返回一个空数组。
 
 ### Using Motion Effects
 `func addMotionEffect(_ effect: UIMotionEffect)`  
-开始应用一个motion effect于view。  
+应用一个motion effect于view。  
+`UIMotionEffect`是一个抽象类，常用其子类`UIInterpolatingMotionEffect`。产生的效果类似于锁屏界面。图片在手机方向改变时会调整其位置。
+
+`var motionEffects: [UIMotionEffect]`   
+
+`func removeMotionEffect(_ effect: UIMotionEffect)`  
+
+### Preserving and Restoring State
+`var restorationIdentifier: String?`  
+决定view是否支持状态恢复的标识符。  
+此属性表明view的状态信息是否应该被保留，也用于在恢复过程中标示出view。默认为nil，表示view的状态不需要被储存。赋值一个string对象使得持有此view的VC知道view有相关状态需要保存。  
 
 
 ---
