@@ -32,7 +32,7 @@ view的背景颜色，animatable。默认值是nil，表示透明的view。
 `tintColor`的调整模式
 
 `var clipsToBounds: Bool`  
-true表示超出该视图可见bounds的部分将被裁剪第掉。默认值为false
+true表示超出该视图可见bounds的部分将被裁剪掉。默认值为false
 
 `var clearsContextBeforeDrawing: Bool`  
 在绘制前是否自动清除bounds的内容。如果为true，则会在下一次绘制前清空上一次绘制的内容。默认为true  
@@ -503,6 +503,82 @@ view上所有gesture recognizer。如果没有，返回一个空数组。
 `var restorationIdentifier: String?`  
 决定view是否支持状态恢复的标识符。  
 此属性表明view的状态信息是否应该被保留，也用于在恢复过程中标示出view。默认为nil，表示view的状态不需要被储存。赋值一个string对象使得持有此view的VC知道view有相关状态需要保存。  
+view必须实现`encodeRestorableStateWithCoder:`和`decodeRestorableStateWithCoder:`方法赋值此属性才有意义。使用这些方法写入view指定的状态信息，随后使用这些数据恢复view之前的状态。  
+important  
+只是设置此属性并不足以保证view的状态被保留和恢复。持有view的VC，以及VC所有的父VC
+，都必须有restoration identifier。  
+
+`func encodeRestorableStateWithCoder(_ coder: NSCoder)`  
+编码view的状态相关信息。  
+如果app支持状态保留，重写此方法。只应该保存view用于恢复其当前状态的数据。不要储存view自身，不要储存启动时可以通过其他方法推断出的数据。  
+只有少数view需要储存其状态信息。大多数view只需要使用从VC获得的数据。此方法适用于拥有**用户自定义**状态且在App重新启动时会丢失。  
+在实现中，此方法可以编码其他引用的可存储的view和VC对象。  
+除了view和VC，其他对象执行正常的序列化，需要实现`NSCoding`协议。在解码过程中，将创建一个新对象并使用从压缩文件中得到的数据初始化。  
+推荐在实现的某部分调用super，使父类有机会保存其状态信息。
+
+`func decodeRestorableStateWithCoder(_ coder: NSCoder)`  
+解码和恢复view的状态相关信息。  
+此方法的实现中应使用存储的状态信息恢复view之前的状态。如果在上一方法中调用了super，此方法也应调用。
+
+### Capturing a View Snapshot
+`func snapshotViewAfterScreenUpdates(_ afterUpdates: Bool) -> UIView`  
+返回基于当前view的内容的快照。  
+参数`afterUpdates`：快照是否合并最近的修改。传入false表示捕获屏幕当前状态，不包括最近的变化。
+
+### Identifying the View at Runtime 
+`var tag: Int`  
+用于标记view对象的integer。  
+默认值为0。
+
+`func viewWithTag(_ tag: Int) -> UIView?`  
+返回tag为指定值的view。  
+此方法搜索当前view及其所有subviews。会搜索整个视图树，直到找到对应的tag或全部遍历。
+
+### Converting Between View Coordinate Systems
+`func convertPoint(_ point: CGPoint, toView view: UIView?) -> CGPoint`  
+将一个point的值从self的坐标系转换到`toView`的坐标系。  
+如果参数`view`为nil，则将point转换到window的坐标系中。否则，参数`view`和`self`都必须属于同一个UIWindow object。
+
+`func convertPoint(_ point: CGPoint, fromView view: UIView?) -> CGPoint`  
+将一个point的值从`fromView`的坐标系转换到self的坐标系。
+
+`func convertRect(_ rect: CGRect, toView view: UIView?) -> CGRect`  
+将一个rect的值从self的坐标系转换到`toView`的坐标系。 
+
+`func convertRect(_ rect: CGRect, fromView view: UIView?) -> CGRect`  
+将一个rect的值从`fromView`的坐标系转换到self的坐标系。
+
+### Hit Testing in a View
+`func hitTest(_ point: CGPoint, withEvent event: UIEvent?) -> UIView?`  
+返回view包含指定点的最远的后代。  
+
+* `point`：view的bounds中的某个点
+* `event`：授权调用此方法的UIEvent，如果在外部调用，可以指定为nil
+
+此方法通过在视图结构中反复调用`pointInside:withEvent:`方法来决定哪个子视图应该受到触摸事件。如果`pointInside:withEvent:`返回true，那么子视图结构继续调用`pointInside:withEvent:`方法直到找到其最靠前的且包含指定点的view。如果view不包含指定点，则视图结构的分支都将被忽略。很少需要直接调用此方法，但可能重写此方法隐藏从subview接受到的touch event。  
+此方法忽略隐藏的view，禁用userInteraction的view，alpha值小于0.01的view。此方法也不会考虑view的内容。因此，一个view仍有可能被返回即使其在指定点部分的content是透明的。  
+处于view的bounds外部的点不会生效，即使这个点确实处于view的某个subview的内部。这可能发生在view的`clipsToBounds`属性为false时。
+
+`func pointInside(_ point: CGPoint, withEvent event: UIEvent?) -> Bool`  
+判断view是否包含指定点。  
+
+### Ending a View Editing Session
+`func endEditing(_ force: Bool) -> Bool`
+使view或其包含的某个textfield退出first responder。返回true表示已经退出。  
+此方法查看当前view和其subviews，寻找作为first responder的text field。如果找到，则要求此text field退出first responder。如果参数`force`为true，则不询问直接退出。  
+在测试中不论参数为true或false。textfield的`canResignFirstResponder`方法都会被调用。而如果`
+canResignFirstResponder`返回false，不会退出编辑状态。此时此方法的返回值与参数相同，而textfield的`isFirstResponder`方法都返回true。
+
+### Observing View-Related Changes
+`func didAddSubview(_ subview: UIView)`  
+`func willRemoveSubview(_ subview: UIView)`  
+`func willMoveToSuperview(_ newSuperview: UIView?)`  
+`func didMoveToSuperview()`   
+`func willMoveToWindow(_ newWindow: UIWindow?)`  
+`func willMoveToWindow(_ newWindow: UIWindow?)`  
+view的subviews、superview、window改变前后view将收到对应方法的通知。
+
+### Observing Focus
 
 
 ---
