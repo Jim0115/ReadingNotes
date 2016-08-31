@@ -579,6 +579,20 @@ canResignFirstResponder`返回false，不会退出编辑状态。此时此方法
 view的subviews、superview、window改变前后view将收到对应方法的通知。
 
 ### Observing Focus
+`func canBecomeFocused() -> Bool`  
+询问view当前状态能否被focus。  
+此方法默认返回false。此方法通知focus engine，view能否被focus。有时即使此方法返回true，view人不能被focus，原因如下：
+
+* view.hidden = true
+* view.alpha = 0
+* view.userInterationEnable = false
+* view当前不再view hierarchy中
+
+`class func inheritedAnimationDuration() -> NSTimeInterval`  
+返回当前动画的持续时间。在一个animation的block调用此方法。
+
+`var focused: Bool { get }`  
+当前view是否被focus。此方法判断self是否等于`UIScreen`的`focusedView`属性。
 
 
 ---
