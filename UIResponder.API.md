@@ -46,5 +46,25 @@ self是否愿意退出first responder状态。
 使用此方法更新自定义input view。view将被立即替换，没有动画。如果self不是first responder，此方法无效果。
 
 ### Responding to Touch Events  
+`func touchesBegan(_ touches: Set<UITouch>, withEvent event: UIEvent?)`  
+当一个或多个手指触摸落在view或window上时提醒responder。  
+`UIResponder`中此方法的默认实现为空。然而UIKit中`UIResponder`的直接子类，尤其是`UIView`，将会沿着responder chain向上传递message。在自定义子类的实现中，调用super的实现即可。不要直接将此
+发送给next responder。例如，如果重写此方法而没有调用super，必须同样重写处理touch event的其他方法。  
+多点触控默认被禁用。设置对应view的`multipleTouchEnable`属性以启用。  
 
+`func touchesMoved(_ touches: Set<UITouch>, withEvent event: UIEvent?)`  
+当一个或多个与事件关联的手指在view或window上移动时提醒responder。  
 
+`func touchesEnded(_ touches: Set<UITouch>, withEvent event: UIEvent?)`  
+当一个或多个手指离开view或window上时提醒responder。  
+当一个responder收到此消息时，应该清理在`touchesBegan:withEvent:`建立的任何状态信息。
+
+`func touchesCancelled(_ touches: Set<UITouch>?, withEvent event: UIEvent?)`  
+当一个系统事件（如低内存警告）取消了一个touch event时此方法被发送给responder。  
+此方法被调用于系统中断需要取消touch event。此方法将生成一个`phase`属性为`.Cancelled`的`UITouch`对象。此方法出现的原因可能是app不再是active状态或view从window中被移除。  
+当一个responder收到此消息时，应该清理在`touchesBegan:withEvent:`建立的任何状态信息。
+
+### Responding to Motion Events
+`func motionBegan(_ motion: UIEventSubtype, withEvent event: UIEvent?)`  
+提示responder一个motion event已经开始。  
+对于motion，iOS只会在motion启动和结束时产生通知。比如，不会汇报单独的晃动。接收motion event的responder必须是first responder。
