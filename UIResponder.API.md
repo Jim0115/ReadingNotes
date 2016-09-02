@@ -67,4 +67,32 @@ self是否愿意退出first responder状态。
 ### Responding to Motion Events
 `func motionBegan(_ motion: UIEventSubtype, withEvent event: UIEvent?)`  
 提示responder一个motion event已经开始。  
-对于motion，iOS只会在motion启动和结束时产生通知。比如，不会汇报单独的晃动。接收motion event的responder必须是first responder。
+对于motion，iOS只会在motion启动和结束时产生通知。比如，不会汇报单独的晃动。接收motion event的responder必须是first responder。  
+此方法的默认实现为空。但UIKit中`UIResponder`的直接子类，尤其是`UIView`，会将此消息沿responder chain向上传递。  
+
+`func motionEnded(_ motion: UIEventSubtype, withEvent event: UIEvent?)`  
+提示responder一个motion event已经结束。  
+
+`func motionCancelled(_ motion: UIEventSubtype, withEvent event: UIEvent?)`  
+提示responder一个motion event已经被取消。  
+此方法被调用的原因大致与touch event对应方法相同。但此方法可能因为晃动持续过长时间而被调用。
+
+### Responding to Press Events
+`func pressesBegan(_ presses: Set<UIPress>, withEvent event: UIPressesEvent?)`  
+`func pressesCancelled(_ presses: Set<UIPress>, withEvent event: UIPressesEvent?)`  
+`func pressesChanged(_ presses: Set<UIPress>, withEvent event: UIPressesEvent?)`  
+`func pressesEnded(_ presses: Set<UIPress>, withEvent event: UIPressesEvent?)`  
+iOS 9 引入的3D Touch相关API。如果一个responder需要自定义press事件的处理，则需要重写全部4个方法。  
+
+### Responding to Remote-Control Events
+`func remoteControlReceivedWithEvent(_ event: UIEvent?)`  
+远程控制事件相关。  
+
+### Getting the Undo Manager
+`var undoManager: NSUndoManager? { get }`  
+返回responder chain中最近的共享的undo manager。  
+默认情况下，application的每个window对象只有一个undo manager：一个用于undo和redo操作的共享对象。然而，responder chain中任何对象的类都可以有其自定义undo manager。（例如，`UITextField`类的实例拥有其自身的undo manager，这个undo manager将在textfield退出first responder状态时被清除。）当你请求一个undo manager时，请求将会沿着responder chain，`UIWindow`对象会返回一个可用的实例。  
+可以向自定义VC添加undo manager，用于向其管理的view执行undo和redo操作。
+
+### Validating Commands
+`func canPerformAction(_ action: Selector, withSender sender: AnyObject?) -> Bool`  
