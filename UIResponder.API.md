@@ -96,3 +96,39 @@ iOS 9 引入的3D Touch相关API。如果一个responder需要自定义press事�
 
 ### Validating Commands
 `func canPerformAction(_ action: Selector, withSender sender: AnyObject?) -> Bool`  
+询问responder启用或禁用UI中的特定指令。  
+
+* `action`：一个关联特定指令的方法。声明在`UIResponderStandardEditActions`中。
+* `sender`：此方法的调用者。
+
+`func targetForAction(_ action: Selector, withSender sender: AnyObject?) -> AnyObject?`  
+返回响应action的目标对象。  
+
+### Accessing the Available Key Commands
+`var keyCommands: [UIKeyCommand]? { get }`  
+能够在此responder触发事件的组合按键。  
+如果一个responder支持键盘组合按键，可以重写此方法，返回一个包含`UIKeyCommand`对象的数组。
+
+### Managing the Text Input Mode
+`var textInputMode: UITextInputMode? { get }`  
+此responder的文字输入模式。  
+当此responder被激活时，text input mode识别语言和显示的键盘。  
+对于responders，系统通常显示一个基于用户语言偏好的键盘。可以重定义此属性，返回一个不同的text input mode，即可使用指定的键盘。用户在此情况下仍然可以切换键盘类型。  
+
+`var textInputContextIdentifier: String? { get }`  
+一个identifier用于标记responder应该提供其text input mode信息。  
+如果重定义此属性，返回一个string值，UIKit会为responder纪录当前的text input mode。在记录模式中，任何代码中对text input mode的改变将会被记录。  
+
+`class func clearTextInputContextIdentifier(_ identifier: String)`  
+从app的user default中清除text input mode信息。  
+
+`var inputAssistantItem: UITextInputAssistantItem { get }`  
+在iPad上，键盘上的复制，剪切，粘贴等快捷栏。不适用于iPhone和iPod。
+
+### Supporting User Activities
+`var userActivity: NSUserActivity?`  
+一个包含被此responder支持的user activity的对象。  
+通过设置responder的`userActivity`属性，这个`NSUserActivity`对象将被UIKit管理。被UIKit管理的user activity将在合适的时机自动保存。可以惰性添加状态信息通过重写`updateUserActivityState:`方法。多个responder可以共享同一个`NSUserActivity`实例，在这种情况下他们将得到同一个`updateUserActivityState:`回调。  
+一个responder可以将其`userActivity`属性设为nil，如果其不再需要参与。任何被UIKit管理的`NSUserActivity`对象如果不再有关联的responder将会被自动失效。  
+
+`func restoreUserActivityState(_ activity: NSUserActivity)`  
