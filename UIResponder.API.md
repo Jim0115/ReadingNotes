@@ -132,3 +132,12 @@ iOS 9 引入的3D Touch相关API。如果一个responder需要自定义press事�
 一个responder可以将其`userActivity`属性设为nil，如果其不再需要参与。任何被UIKit管理的`NSUserActivity`对象如果不再有关联的responder将会被自动失效。  
 
 `func restoreUserActivityState(_ activity: NSUserActivity)`  
+恢复给定的需要继续的user activity的状态。  
+子类重写此方法，通过给定的user activity恢复responder的状态。  
+此方法可以但不需要手动调用。在AppDelegate的`application:continueUserActivity:restorationHandler:`方法中，使用`restorationHandler`将需要恢复状态的对象作为参数传递，系统将在合适的时机调用本方法。  
+
+`func updateUserActivityState(_ activity: NSUserActivity)`  
+更新给定的user activity的状态。  
+子类重写此方法用于更新给定user activity的状态信息。不能直接修改`activity`的`userInfo`属性，而是应该调用`activity`的`addUserInfoEntriesFromDictionary:`方法，向`userInfo`中添加信息。
+当user activity的状态需要改变时，设置对应`NSUserActivity`对象的`needsSave`属性为true，此方法将在合适的时间被调用。  
+需要在适当位置调用super的实现。
