@@ -38,6 +38,43 @@
 
 同时可能有多个状态。control可能根据其不同状态有不同的配置。
 
+### UIControlEvents
+    struct UIControlEvents : OptionSetType {
+        init(rawValue rawValue: UInt)
+        static var TouchDown: UIControlEvents { get }
+        static var TouchDownRepeat: UIControlEvents { get }
+        static var TouchDragInside: UIControlEvents { get }
+        static var TouchDragOutside: UIControlEvents { get }
+        static var TouchDragEnter: UIControlEvents { get }
+        static var TouchDragExit: UIControlEvents { get }
+        static var TouchUpInside: UIControlEvents { get }
+        static var TouchUpOutside: UIControlEvents { get }
+        static var TouchCancel: UIControlEvents { get }
+        static var ValueChanged: UIControlEvents { get }
+        static var PrimaryActionTriggered: UIControlEvents { get }
+        static var EditingDidBegin: UIControlEvents { get }
+        static var EditingChanged: UIControlEvents { get }
+        static var EditingDidEnd: UIControlEvents { get }
+        static var EditingDidEndOnExit: UIControlEvents { get }
+        static var AllTouchEvents: UIControlEvents { get }
+        static var AllEditingEvents: UIControlEvents { get }
+        static var ApplicationReserved: UIControlEvents { get }
+        static var SystemReserved: UIControlEvents { get }
+        static var AllEvents: UIControlEvents { get }
+    }
+
+* TouchDown：按下事件
+* TouchDownRepeat：重复的按下事件。重复次数记录在`UITouch`的`tapCount`中，一定大于1。
+* TouchDragInside：手指在control的bounds中拖动时触发。持续拖动持续触发。
+* TouchDragOutside：手指拖动出control的bounds。持续拖动持续触发。
+* TouchDragEnter：手指从其他位置拖入control的bounds。仅在进入时触发一次。
+* TouchDragExit：手指从control的bounds中拖动到bounds外。仅在离开时触发一次。
+* TouchUpInside：最常用。手指点击control的bounds并在bounds中离开。
+* TouchUpOutside：手指点击control的bounds，在bounds外离开。
+* TouchCancel：系统事件取消了当前control的touch。
+* ValueChanged：touch改变了control的某些值。
+* PrimaryActionTriggered：button触发的语义action。iOS 9。
+* 
 
 ---
 
@@ -47,4 +84,12 @@
 
 ### The Target-Action Mechanism
 Control使用Target-Action机制报告代码中发生的事件。TA机制简化了App中使用controls的代码。用于替代编写追踪touch event的代码，只需要编写响应指定事件的action方法。例如，编写一个响应slider值变化的方法。Control处理所有追踪touch event的工作，用于决定何时调用你的方法。  
-当向control添加action method是，
+当向control添加action method时，使用`addTarget:action:forControlEvents:`方法指定action method和定义此方法的对象。（使用IB与之类似。）Target可以是任何对象，但通常是root view包含此control的VC。如果target指定为nil，则会沿着responder chain寻找指定的方法。
+可用于action的方法签名有3种形式。
+
+    @IBAction func doSomething()
+    @IBAction func doSomething(sender: UIButton)
+    @IBAction func doSomething(sender: UIButton, forEvent event: UIEvent)
+    
+sender表示此方法调用者，event表示触发此方法的`UIEvent`对象。  
+当用户以指定方式与control交互时，action method被调用。
