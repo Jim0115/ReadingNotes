@@ -1,4 +1,4 @@
-## UIControl
+# UIControl
 #### 父类
 `UIView`
 
@@ -100,4 +100,29 @@ Control使用Target-Action机制报告代码中发生的事件。TA机制简化�
     @IBAction func doSomething(sender: UIButton, forEvent event: UIEvent)
     
 sender表示此方法调用者，event表示触发此方法的`UIEvent`对象。  
-当用户以指定方式与control交互时，action method被调用。`UIControlEvents`类型定义了
+当用户以指定方式与control交互时，action method被调用。`UIControlEvents`类型定义了可以被control报告的所有类型。当配置一个control时，必须指定哪个事件将会触发你的方法。对于一个button，可能会使用`TouchDown`或`TouchUpInside`。对于一个slider，通常使用`ValueChanged`。  
+当一个控制指定的事件发生时，control会调用所有关联的action method。Action method通过当前的`UIApplication`对象进行分配，这将找到合适的对象处理消息，如果需要，沿着responder chain向上传递。  
+
+### 创建一个 UIControl 的子类
+创建`UIControl`的子类将是你能够访问内置的TA机制，简化事件处理的过程。可以通过以下两种方式创建已存在control的子类，修改其行为。
+
+1. 重写一个已存在control的`sendAction:to:forEvent:`方法用于监控和修改派发action method到target的过程。可能会使用此方法对指定object、selector或event修改派发行为。
+2. 重写 `beginTrackingWithTouch:withEvent:`, `continueTrackingWithTouch:withEvent:`, `endTrackingWithTouch:withEvent:`, and `cancelTrackingWithEvent:`方法用于追踪发生在control中的touch event。可以根据追踪信息执行额外的action。总是使用这些方法追踪touch event，而不是使用定义在`UIResponder`中的方法。  
+
+
+如果直接继承自`UIControl`，子类要负责设置和管理control的appearance。使用追踪方法追踪events，同时更新状态和发送action。
+
+## API
+### Configuring the Control’s Attributes
+`var state: UIControlState { get }`  
+control的状态，通过位掩码指定。Swift中此种类型称为`OptionSetType`。  
+一个control在一个时间点可能有不止一个状态。例如，一个control可以是同时highlighted和focused的。  
+
+`var enabled: Bool`  
+control是否是可用的。  
+true表示可用，false为不可用。一个可用的control能够响应user interactions，不可用的control会忽略touch event，并将自身表示成不同样子。设置此属性为true将向`state`中添加`Disable`；设置为false将移除。  
+新创建的control默认为true。
+
+`var selected: Bool`  
+control是否处于被选中状态。  
+大多数control不会因为此选项改变其外观，但有些会。
