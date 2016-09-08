@@ -74,7 +74,15 @@
 * TouchCancel：系统事件取消了当前control的touch。
 * ValueChanged：touch改变了control的某些值。
 * PrimaryActionTriggered：button触发的语义action。iOS 9。
-* 
+* EditingDidBegin：`UITextField`开始编辑。
+* EditingChanged：`UITextField`中文字变化。
+* EditingDidEnd：`UITextField`编辑结束。通过离开其bounds。
+* EditingDidEndOnExit：`UITextField`编辑结束。
+* AllTouchEvents：所有的touch event。
+* AllEditingEvents：`UITextField`所有的editing event。
+* ApplicationReserved：应用保留。
+* SystemReserved：系统保留。
+* AllEvents：所有event，包括系统event。
 
 ---
 
@@ -92,4 +100,4 @@ Control使用Target-Action机制报告代码中发生的事件。TA机制简化�
     @IBAction func doSomething(sender: UIButton, forEvent event: UIEvent)
     
 sender表示此方法调用者，event表示触发此方法的`UIEvent`对象。  
-当用户以指定方式与control交互时，action method被调用。
+当用户以指定方式与control交互时，action method被调用。`UIControlEvents`类型定义了
