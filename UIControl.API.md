@@ -125,4 +125,37 @@ true表示可用，false为不可用。一个可用的control能够响应user in
 
 `var selected: Bool`  
 control是否处于被选中状态。  
-大多数control不会因为此选项改变其外观，但有些会。
+大多数control不会因为此选项改变其外观，但有些会。比如`UISegmentedControl`会追踪被选中的segment。  
+默认为false。  
+
+`var highlighted: Bool`  
+control是否处于高亮状态。  
+Control会响应touch event，自动设置和清除此状态。  
+默认为false。  
+
+`var contentVerticalAlignment: UIControlContentVerticalAlignment`  
+在垂直方向上内容在control的bounds中的对齐方式。  
+对于那些饱含文字或图片内容的controls，使用此选项在control的bounds内对齐content。并不是所有的子类都有可以对齐的content，由子类负责如何应用此属性。默认值为`Top`。
+
+`var contentHorizontalAlignment: UIControlContentHorizontalAlignment`  
+水平方向上对齐方式。  
+
+### Accessing the Control’s Targets and Actions
+`func addTarget(_ target: AnyObject?, action action: Selector, forControlEvents controlEvents: UIControlEvents)`  
+将control与target对象和action method关联。  
+
+* `target`：其action被调用的对象。如果指定为nil，UIKit会沿着responder chain寻找能够响应指定action的对象，将消息发送给此对象。
+* `action`：一个关联action method的selector。不能为nil。
+* `controlEvents`：指定当何种事件发生时调用action。至少一个。
+
+此方法可以调用多次，想control添加不同的target和action。多次调用此方法，传入相同的参数并不会产生影响。Control维护一个列表用于保存target，action和event。  
+Control不会retain参数target。所以需要自己保留target的强引用。  
+将`controlEvents`参数指定为0不会阻止之前注册的target和action。想要停止发送事件，调用`removeTarget:action:forControlEvents:`方法。  
+
+`func removeTarget(_ target: AnyObject?, action action: Selector, forControlEvents controlEvents: UIControlEvents)`  
+停止向指定的target传递事件。  
+使用此方法阻止control向target传递event。如果指定了一个有效的`target`，则会停止指定event的所有action。如果指定`target`为nil，则停止对应event的所有target的所有action。  
+尽管此方法不会考虑`action`参数，仍需要指定合适的值。如果指定的TA组合不再有任何有效的control event关联，control会清除其内部对应的数据结构。
+
+`func actionsForTarget(_ target: AnyObject?, forControlEvent controlEvent: UIControlEvents) -> [String]?`  
+返回当指定event发生时，参数target将会被调用的所有action。  
