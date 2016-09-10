@@ -159,3 +159,49 @@ Control不会retain参数target。所以需要自己保留target的强引用。
 
 `func actionsForTarget(_ target: AnyObject?, forControlEvent controlEvent: UIControlEvents) -> [String]?`  
 返回当指定event发生时，参数target将会被调用的所有action。  
+返回一个包含字符串的数组，字符串对应selector。若无对应selector，返回nil。  
+
+`func allControlEvents() -> UIControlEvents`  
+返回control已关联的action的所有events。  
+
+`func allTargets() -> Set<NSObject>`  
+返回此control关联的所有target对象。  
+
+### Triggering Actions
+`func sendAction(_ action: Selector, to target: AnyObject?, forEvent event: UIEvent?)`  
+调用指定的action。  
+此方法使用提供的信息并将其传递到`UIApplication`单例用于派发。如果提供了有效的target，app会在此target上调用action method。如果target为nil，app会搜索responder chain，找到定义此方法的对象。  
+子类可以重写此方法用于监控和修改action的派发行为。如果想要继续执行action method，实现应该调用super。
+
+`func sendActionsForControlEvents(_ controlEvents: UIControlEvents)`  
+调用与指定事件相关联的action method。  
+当你想让control执行与特定事件关联的action时，调用此方法。此方法会遍历control的注册的target和action，对每个关联参数事件的TA组合调用`sendAction:to:forEvent:`。
+
+### Tracking Touches and Redrawing Controls
+`func beginTrackingWithTouch(_ touch: UITouch, withEvent event: UIEvent?) -> Bool
+`    
+当一个touch event进入control的bounds时被调用。  
+返回true表示control应该继续追踪touch event。返回false停止追踪。  
+默认实现返回true。子类可以重写此方法，用其响应事件。使用参数提供的event判断control的那个部分被点击，设置所有初始状态信息。
+
+`func continueTrackingWithTouch(_ touch: UITouch, withEvent event: UIEvent?) -> Bool`  
+当关联control的touch event更新时被调用。  
+返回true表示继续追踪事件，返回false表示停止。  
+此方法将在touch event在control的bounds里被追踪时持续调用。默认实现返回true。  
+
+`func endTrackingWithTouch(_ touch: UITouch?, withEvent event: UIEvent?)`  
+在与control关联的touch event结束时被调用。  
+如果重写此方法，必须调用super。  
+
+`func cancelTrackingWithEvent(_ event: UIEvent?)`  
+告诉control停止追踪给定event。  
+当一个与control相关的touch event被取消时control调用此方法。默认实现取消任何正在进行的追踪并更新control的状态信息。子类重写此方法用于执行任何取消操作。同时，清除与追踪event相关的数据。  
+如果重写此方法，必须调用super。  
+
+`var tracking: Bool { get }`  
+control当前是否正在追踪touch event。  
+当正在追踪touch event时，control将此属性设置为true。当追踪结束或被取消时，control将此属性设为false。  
+
+`var touchInside: Bool { get }`  
+一个被追踪的touch event当前是否在control的bounds中。  
+当正在追踪一个touch event时，control会更新此属性指示最近的touch是否还在control的bounds中。control使用此信息触发特定的事件。比如，`TouchDragEnter`或`TouchDragExit`等。
