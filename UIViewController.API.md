@@ -26,6 +26,21 @@ VC惰性加载其views。第一次访问`view`属性时加载或创建VC的view�
 若要使用nib文件初始化一个VC，使用代码创建VC类，使用`initWithNibName:bundle:`对其初始化。当其view被请求时，VC从nib文件中加载。
 * 使用`loadView`方法指定VC的view。在那个方法中，创建你的view hierarchy，将其设置为VC的`view`。
 
-以上三种方法有相同的最终结果：创建合适的view集合，通过`view`属性暴露。
+以上三种方法有相同的最终结果：创建合适的view集合，通过`view`属性暴露。  
+每一个VC都应该是其view的唯一持有者。不能在VC之间共享view。  
+一个VC的root view总是被缩放至指定大小。对于view hierarchy中的其它view，使用IB指定约束用于管理每个view在其superview的bounds中的大小和位置。  
+
+### Handling View-Related Notifications
+当VC的view的可见性改变时，VC自动调用其自身的方法，因此子类可以响应变化。使用类似`viewWillAppear:`的方法布置view用于显示在屏幕上，使用`viewWillDisappear:`方法保存变化和其它状态信息。
+
+### Handling View Rotations
+在iOS 8中，所有方向相关的方法都已经不推荐使用。相反，旋转被看作VC的view的size发生变化。因此将被`viewWillTransitionToSize:withTransitionCoordinator:`方法报告。当界面方向变化时，UIKit在window的root VC上调用此方法。VC随后提醒其child VC，沿着VC hierarchy传递此消息。  
+在iOS 6和iOS 7中，app支持的界面方向定义在app的`Info.plist`文件中。VC可以通过重写`supportedInterfaceOrientations`方法限制支持的的方向。通常，系统仅在window的rootVC或VC填满整个窗口时调用此方法。child VC使用由其parent VC提供的window的一部分，不直接参与决定支持的方向。App的方向掩码和VC的方向掩码的交集用于决定VC支持那些方向。  
+当一个VC想要在某个方向全屏时，可以重写`preferredInterfaceOrientationForPresentation`方法。  
+当一个旋转发生在可见的VC时，`willRotateToInterfaceOrientation:duration:`, `willAnimateRotationToInterfaceOrientation:duration:`, and `didRotateFromInterfaceOrientation:`将在旋转过程中被调用。`viewWillLayoutSubviews`方法也会在view被其superview改变大小和位置后被调用。当VC不是可见的时，这些方法在旋转时都不会被调用。反而，`viewWillLayoutSubviews`方法将在view可见时被调用。  
+在启动时，app总是以竖屏方向设置界面。在`application:didFinishLaunchingWithOptions:`返回后，app使用VC的旋转机制旋转view到合适的方向。  
+
+### Implementing a Container View Controller
+
 
 
