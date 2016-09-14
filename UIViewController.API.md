@@ -54,9 +54,31 @@ Container必须先关联child VC，之后才能讲child的root view加入到自�
 当创建一个container VC时，不必重写任何方法。
 
 ### Memory Management
-在iOS中，内存是关键资源。VC提供内置的关键时刻减少其内存使用的支持。`UIViewController`类提供了一些低内存状态的自动处理通过其`didReceiveMemoryWarning`，用于释放不必要的内存。  
+在iOS中，内存是关键资源。VC提供内置的关键时刻减少其内存使用的支持。`UIViewController`类提供了一些低内存状态的自动处理通过其`didReceiveMemoryWarning`方法，用于释放不必要的内存。  
 
 ### State Preservation and Restoration
 如果你向VC的`restorationIdentifier`属性赋值，系统可能会要求VC encode自身，在app转换到background状态时。当保存时，VC会保存其view hierarchy中任何拥有`restoration identifiers`的view。VC不会自动保存任何状态。如果你实现了一个自定义contain VC，你必须手动encode任何child VC。对于encode的每个child都必须有独立的restoration identifiers。
 
+## API
+`init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?)`  
+Designated Initializer  
+从指定bundle的nib文件中返回新的初始化后的VC。  
+这是此类的指定构造器。当使用SB定义VC和其关联的view时，不要直接初始化VC的类。相反，当一个segue被触发时，你的VC会自动创建。或者，使用SB对象的`instantiateViewControllerWithIdentifier:`方法。当从一个SB实例化一个VC时，iOS构造一个新的VC通过其`initWithCoder:`方法，设置其`nibName`属性为储存在SB中的nib文件。  
+指定的nib文件不会立即被读取。它将在VC的view第一次被访问时读取。如果你想在nib文件读取之后执行额外的初始化操作，重写`viewDidLoad`方法，在此执行操作。  
+如果参数`nibName`为nil同时没有重写`loadView`方法，VC会搜索其`nibName`属性描述的nib文件。  
 
+
+`var nibName: String? { get }`  
+VC的nib文件的名字，如果已被指定。  
+此属性包括了在初始化时使用`initWithNibName:bundle:`方法指定的值。可能为nil。  
+如果你使用一个nib file存储VC的view，推荐在初始化时制度nib file。然而，如果没有指定nib name，也没有重写`loadView`方法，VC会通过其他方法搜索nib文件。特别的，VC会查找拥有何时名称的nib文件，当view被请求时读取nib文件。会按照以下顺序查找nib文件：  
+
+1. 如果VC的类名以"Controller"结尾，例如"MyViewController"，VC会查找nib文件的名称匹配其类名去掉"Controller"的部分，例如`MyView.nib`。
+2. 会查找匹配VC类名的nib file。例如`MyViewController`类会查找`MyViewController.nib`文件。
+
+包含平台特定信息的nib name只会在对应平台被读取。比如`MyViewController~ipad.nib`只会在iPad上被读取。
+
+`var nibBundle: NSBundle? { get }`  
+如果存在，返回VC的nib bundle。
+
+### Interacting with Storyboards and Segues
