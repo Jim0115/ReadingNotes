@@ -82,3 +82,27 @@ VC的nib文件的名字，如果已被指定。
 如果存在，返回VC的nib bundle。
 
 ### Interacting with Storyboards and Segues
+`var storyboard: UIStoryboard? { get }`  
+返回VC的来源SB。  
+如果VC不是使用SB实例化的，此选项为nil。
+
+`func shouldPerformSegueWithIdentifier(_ identifier: String, sender sender: AnyObject?) -> Bool`  
+判断拥有指定identifier的segue是否会被执行。  
+默认返回true。
+
+`func prepareForSegue(_ segue: UIStoryboardSegue, sender sender: AnyObject?)`  
+提醒VC一个segue将要被执行。  
+默认实现为空。子类可以重写此方法，使用其配置新VC，优先于其显示。segue对象包括了transition信息，包括前后两个VC的引用。  
+由于segue可以由多种方式触发，可以使用参数`segue`和`sender`的信息确定不同的逻辑。  
+
+`func performSegueWithIdentifier(_ identifier: String, sender sender: AnyObject?)`  
+从当前VC的SB文件中初始化拥有指定identifier的segue。  
+通常，segue自动初始化，不会使用此方法。然而，可以在segue不能从SB文件中配置时使用此方法。例如，可能从一个响应晃动或加速器事件的自定义action handler中调用此方法。  
+当前VC必须是从SB中读取的。否则此方法会产生异常。  
+
+`func allowedChildViewControllersForUnwindingFromSource(_ source: UIStoryboardUnwindSegueSource) -> [UIViewController]`  
+返回应该被搜索到的作为unwind segue的destination的child VC。  
+UIKit在搜索一个unwind segue的destination时调用此方法。默认实现返回`childViewControllers`的内容减去`childViewControllerContainingSegueSource:`方法返回的VC。如果需要修改搜索顺序可以重写此方法。例如，一个navigation controller会反转顺序，从navigation stack顶部的VC开始搜索。  
+
+`func childViewControllerContainingSegueSource(_ source: UIStoryboardUnwindSegueSource) -> UIViewController?`  
+返回
