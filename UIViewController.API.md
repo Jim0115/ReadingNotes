@@ -140,3 +140,32 @@ UIKit在搜索一个unwind segue的destination时调用此方法。默认实现�
 在VC的view被加载到内存之后被调用。  
 无论以何种方法创建view，此方法都会被调用。通常在此处执行一些额外的初始化操作。  
 
+`func loadViewIfNeeded()`  
+如果view还没被加载，就加载view。iOS 9新增。  
+
+`var viewIfLoaded: UIView? { get }`  
+如果VC的view已加载，返回view。否则返回nil。iOS 9新增。
+
+`var title: String?`  
+象征VC管理的view的本地化的字符串。  
+设置人类可读的string用于描述view。如果view有一个有效的navigation item或tabbar item，设置此属性会同时设置二者的title。  
+
+`var preferredContentSize: CGSize`  
+VC的view的倾向大小。  
+此属性主要用于在一个popover中显示一个VC的内容，但也可能用于其他地方。当一个VC正在一个popover中显示时，修改此属性会动画化大小变化。然而，将宽或高修改为0不会产生动画。  
+
+### Presenting View Controllers
+`var modalPresentationStyle: UIModalPresentationStyle` 
+modelly presented VC的呈现风格。 
+
+    enum UIModalPresentationStyle : Int {
+        case FullScreen
+        case PageSheet
+        case FormSheet
+        case CurrentContext
+        case Custom
+        case OverFullScreen
+        case OverCurrentContext
+        case Popover
+        case None
+    }
