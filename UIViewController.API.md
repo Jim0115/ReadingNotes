@@ -43,7 +43,7 @@ VC惰性加载其views。第一次访问`view`属性时加载或创建VC的view�
 ### Implementing a Container View Controller
 一个自定义的`UIViewController`子类也可以作为一个container VC。一个container VC管理其持有的其它VC的内容呈现，也被认为是它的child VC。一个child的view可以作为container的view或和container的view一起展现。  
 一个container子类必须声明关联其children的public接口。这些方法的实现由你决定，取决于你创建的container的语义。你需要决定多少children可以被你的VC同时显示，何时显示这些children，在你VC的view hierarchy中的何处显示。你的VC类定义被children共享的关系。通过公开一个container的清晰的公共接口，确保children合理使用其逻辑，没有访问过多关于container实现行为的细节。  
-Container必须先关联child VC，之后才能讲child的root view加入到自己的view hierarchy中。这允许iOS确定从child VC的事件路径。同样，在从view hierarchy中移除了child的root view后，也要断开child VC的连接。用于建立或断开这些连接，你的container调用基类定义的指定方法。这些方法不是被你的container类的client调用的，仅用于你的container实现提供指定容器的行为。  
+Container必须先关联child VC，之后才能将child的root view加入到自己的view hierarchy中。这允许iOS确定从child VC的事件路径。同样，在从view hierarchy中移除了child的root view后，也要断开child VC的连接。用于建立或断开这些连接，你的container调用基类定义的指定方法。这些方法不是被你的container类的client调用的，仅用于你的container实现提供指定容器的行为。  
 以下是推荐调用的方法：
 
 * `addChildViewController:`
@@ -105,4 +105,38 @@ VC的nib文件的名字，如果已被指定。
 UIKit在搜索一个unwind segue的destination时调用此方法。默认实现返回`childViewControllers`的内容减去`childViewControllerContainingSegueSource:`方法返回的VC。如果需要修改搜索顺序可以重写此方法。例如，一个navigation controller会反转顺序，从navigation stack顶部的VC开始搜索。  
 
 `func childViewControllerContainingSegueSource(_ source: UIStoryboardUnwindSegueSource) -> UIViewController?`  
-返回
+返回包含unwind segue的source的child VC。  
+
+`func canPerformUnwindSegueAction(_ action: Selector, fromViewController fromViewController: UIViewController, withSender sender: AnyObject) -> Bool`  
+在一个VC上调用决定其是否响应一个unwind action。  
+当一个unwind segue被触发后，UIKit使用此方法和`allowedChildViewControllersForUnwindingFromSource:`方法确定一个处理unwind segue的合适VC。  
+默认实现返回true，在当前VC实现了action同时不是`fromViewController`时。
+
+`func unwindForSegue(_ unwindSegue: UIStoryboardSegue, towardsViewController subsequentVC: UIViewController)`  
+当一个unwind segue过渡到新VC时被调用。作用类似于`prepareForSegue:`
+
+### Managing the View  
+`var view: UIView!`  
+返回VC管理的view。  
+此属性储存VC的view hierarchy的root view。默认为nil。  
+如果访问此属性且其当前为nil时，VC会自动调用`loadView`方法创建view。  
+每个VC对象是其view的基持有者。不应该在多个VC对象间共享一个view对象。唯一的例外是container VC。  
+由于访问此属性会导致view被自动加载，可以使用`isViewLoaded`方法判断view当前是否在内存中。访问`isViewLoaded`时不会加载view。  
+`UIViewController`类在低内存条件下会自动将此属性设置为nil，在VC对象被释放时也是如此。  
+
+`func isViewLoaded() -> Bool`  
+返回view当前是否被加载到内存中。  
+调用此方法时不会尝试加载view。
+
+`func loadView()`  
+创建VC管理的view。  
+不要直接调用此方法。VC在被请求其`view`属性但当前为nil时调用此方法。此方法加载或创建view，将其赋值`view`属性。  
+如果VC有一个关联的nib文件，此方法从nib文件中读取view。  
+如果使用IB创建view并初始化VC，不要重写此方法。  
+如果手动创建view，可以重写此方法。如果这么做，将view hierarchy的root view赋值给`view`属性。创建的view对象必须是唯一的实例，不应和其他任何VC共享。此方法的自定义实现不要调用super。  
+如果想执行任何额外的初始化操作，在`viewDidLoad`中执行。  
+
+`func viewDidLoad()`  
+在VC的view被加载到内存之后被调用。  
+无论以何种方法创建view，此方法都会被调用。通常在此处执行一些额外的初始化操作。  
+
