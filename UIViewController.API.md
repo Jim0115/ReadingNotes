@@ -152,7 +152,7 @@ UIKit在搜索一个unwind segue的destination时调用此方法。默认实现�
 
 `var preferredContentSize: CGSize`  
 VC的view的倾向大小。  
-此属性主要用于在一个popover中显示一个VC的内容，但也可能用于其他地方。当一个VC正在一个popover中显示时，修改此属性会动画化大小变化。然而，将宽或高修改为0不会产生动画。  
+此属性主要用于在一个popover中显示一个VC的内容，但也可能被用于其他地方。当一个VC正在一个popover中显示时，修改此属性会动画化大小变化。然而，将宽或高修改为0不会产生动画。  
 
 ### Presenting View Controllers
 `var modalPresentationStyle: UIModalPresentationStyle` 
