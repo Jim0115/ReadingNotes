@@ -189,3 +189,19 @@ VC是否应该被一个popover present。
 `func showViewController(_ vc: UIViewController, sender sender: AnyObject?)`  
 作为主要内容present一个VC。  
 使用此方法，VC不需要知道其是内嵌在一个navigation controller中或是split-view controller中。`UISplitViewController`和`UINavigationViewController`重写此方法，根据其设计处理呈现形式。例如，navigation controller重写此方法，push vc到navigation stack。  
+此方法的默认实现是调用`targetViewControllerForAction:sender:`方法定位重写此方法的VC对象。在此对象上调用当前方法，此对象将会以合适的方法显示VC。如果`targetViewControllerForAction:sender:`方法返回nil，此方法将使用window的root VC modelly present `vc`。  
+
+`func showDetailViewController(_ vc: UIViewController, sender sender: AnyObject?)`  
+作为次要内容present一个vc。  
+
+`func presentViewController(_ viewControllerToPresent: UIViewController, animated flag: Bool, completion completion: (() -> Void)?)`  
+模态present一个VC。  
+在水平regular环境中，VC的呈现风格由`modalPresentationStyle`属性指定。在水平compact环境中，VC默认全屏present。如果修改`viewControllerToPresent`对象的presentation controller的delegate，可以动态修改呈现风格。  
+调用此方法的对象并不总是处理presentation的对象。每个presentation style有不同的管理规则的行为。例如，全屏presentation必须由全屏的VC产生。如果当前VC不是全屏的，它会向前传递请求到最近的parent，parent处理或继续向前传递。  
+在显示VC之前，方法会根据presentation style修改VC的view的大小。对于大多数style，resulting view会根据被present的VC的`modalTransitionStyle`属性确定动画。对于自定义presentation，view使用被present的VC的transitioning delegate确定动画。对于current context presentation，VC会使用当前VC的transition style。  
+completion handler在`viewDidAppear:`方法之后在presented VC上被调用。  
+
+`func dismissViewControllerAnimated(_ flag: Bool, completion completion: (() -> Void)?)`  
+dismiss被当前VC modally present的VC。  
+presenting VC负责dismiss其present的VC。如果你在presented VC上调用此方法，UIKit会要求presenting VC处理dismissal。  
+如果连续present多个VC
