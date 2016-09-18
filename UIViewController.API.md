@@ -155,8 +155,8 @@ VC的view的倾向大小。
 此属性主要用于在一个popover中显示一个VC的内容，但也可能被用于其他地方。当一个VC正在一个popover中显示时，修改此属性会动画化大小变化。然而，将宽或高修改为0不会产生动画。  
 
 ### Presenting View Controllers
-`var modalPresentationStyle: UIModalPresentationStyle` 
-modelly presented VC的呈现风格。 
+`var modalPresentationStyle: UIModalPresentationStyle`  
+modally presented VC的呈现风格。 
 
     enum UIModalPresentationStyle : Int {
         case FullScreen
@@ -169,3 +169,23 @@ modelly presented VC的呈现风格。
         case Popover
         case None
     }
+此属性决定了一个VC在被present时将以何种形式显示。在水平compact环境中，model VC总是全屏显示。水平regular环境中，有许多不同选项。所有可能的情况列举在`UIModalPresentationStyle`中。  
+
+`var modalTransitionStyle: UIModalTransitionStyle`  
+modal present时的过渡风格。
+
+    enum UIModalTransitionStyle : Int {
+        case CoverVertical
+        case FlipHorizontal
+        case CrossDissolve
+        case PartialCurl
+    }
+此属性决定了VC被`presentViewController:animated:completion:`方法呈现时的动画。必须在present前修改此属性才有效。默认值为`CoverVertical`。  
+
+`var modalInPopover: Bool`  
+VC是否应该被一个popover present。  
+默认值为false。将此属性设置为true将导致一个VC在显示时禁止在之外的交互。可以使用此属性确保点击popover VC之外的地方不会使其dismiss。  
+
+`func showViewController(_ vc: UIViewController, sender sender: AnyObject?)`  
+作为主要内容present一个VC。  
+使用此方法，VC不需要知道其是内嵌在一个navigation controller中或是split-view controller中。`UISplitViewController`和`UINavigationViewController`重写此方法，根据其设计处理呈现形式。例如，navigation controller重写此方法，push vc到navigation stack。  
