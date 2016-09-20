@@ -204,4 +204,20 @@ completion handler在`viewDidAppear:`方法之后在presented VC上被调用。
 `func dismissViewControllerAnimated(_ flag: Bool, completion completion: (() -> Void)?)`  
 dismiss被当前VC modally present的VC。  
 presenting VC负责dismiss其present的VC。如果你在presented VC上调用此方法，UIKit会要求presenting VC处理dismissal。  
-如果连续present多个VC
+如果连续present多个VC，形成了一个presented VC的栈，在栈下方的VC上调用此方法会立即dismiss其childVC和childVC上方的所有VC。此时，只有最上方view的dismiss会有动画，其他会直接从栈中移除。  
+如果想保留被present的VC的引用，在调用此方法前使用`presentedViewController`属性即可。  
+completion handler会在`viewDidAppear:`方法之后被调用在presented VC上。  
+
+`var definesPresentationContext: Bool`  
+当此VC或其某个后代present一个VC时，此VC是否被覆盖。  
+当使用`UIModalPresentationCurrentContext`或`UIModalPresentationOverCurrentContext`style present一个VC时，此属性控制某个存在于VC hierarchy中的VC真正被新内容覆盖。当一个基于context的presentation发生时，UIKit会从presentingVC开始遍历VC hierarchy。如果找到某个VC的此选项为true，则要求此VC present newVC。如果没有VC定义presentation context，UIKit 会要求window的root VC处理presentation。  
+默认值为false。有些系统提供的VC，例如`UINavigationController`，默认值为true。  
+
+`var providesPresentationContextTransitionStyle: Bool`  
+VC是否指定其present的VC的transition style。  
+当一个VC的`definesPresentationContext`属性为true时，其可以使用其自身的transition style替换其presented VC的。当此属性为true时，当前VC的transition style用于替换presentedVC的style。当此属性为false时，UIKit使用presentedVC的tansition style。此属性默认为false。
+
+`func disablesAutomaticKeyboardDismissal() -> Bool`  
+当前的input view是否会在changing control时自动dismiss。  
+true：不会dismiss。false：可能被dismiss。  
+重写子类的此方法
