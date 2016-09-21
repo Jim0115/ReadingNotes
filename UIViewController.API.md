@@ -220,4 +220,4 @@ VC是否指定其present的VC的transition style。
 `func disablesAutomaticKeyboardDismissal() -> Bool`  
 当前的input view是否会在changing control时自动dismiss。  
 true：不会dismiss。false：可能被dismiss。  
-重写子类的此方法
+重写子类的此方法用于允许或禁止当前的input view在从一个需要input view的control切换到到一个不需要input view的control时是否会dismiss。在通常情况下，当用户点击了一个需要input view的control时，系统会自动显示input view。点击一个不需要input view的control会导致input view被dismiss，但不是一定会发生。
