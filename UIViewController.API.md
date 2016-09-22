@@ -240,4 +240,25 @@ VC通过其`canPerformAction:withSender:`确定其能否响应某个action。
 
 `var presentationController: UIPresentationController? { get }`  
 管理当前VC的最近的presentation controller。  
-如果VC或其某个祖先
+如果VC或其某个祖先被一个presentation controller管理，此属性包含该对象。如果没有被一个presentation controller管理，此属性返回nil。  
+如果还没有present一个VC，访问此属性会创建一个基于VC的`modalPresentationStyle`属性的presentation controller。因此，在访问此属性前必须要先设置好`modalPresentationStyle`属性。  
+
+`var popoverPresentationController: UIPopoverPresentationController? { get }`  
+与上一属性类似，如果在访问此属性前将`modalPresentationStyle`设置为`.popover`，那么通过此属性可以获得popover的presentation controller。如果`modalPresentationStyle`为其他值，那么此属性将返回nil。
+
+### Responding to View Events  
+`func viewWillAppear(_ animated: Bool)`  
+提醒VC，其view将要被加入view hierarchy。  
+此方法在VC的view将要被加入一个view hierarchy前被调用，同时也在所有view的动画被配置前。可以重写此方法用于执行与显示view相关的任务。例如，使用此方法改变状态栏的方向或风格以协调被present的view的方向和风格。如果重写此方法，必须在实现中某部分调用super。  
+如果某个VC popover了一个VC，那么在被popover的VC dismiss时此方法不会被调用。
+
+`func viewDidAppear(_ animated: Bool)`  
+提醒VC，其view已经被加入view hierarchy。  
+可以重写此方法执行与present view相关的额外操作。如果重写此方法，必须在实现中某部分调用super。  
+如果某个VC popover了一个VC，那么在被popover的VC dismiss时此方法不会被调用。
+
+`func viewWillDisappear(_ animated: Bool)`  
+提醒VC，其view将要从一个view hierarchy中被移除。  
+此方法在view被移除前被调用，同时也在动画被配置前。  
+子类可以重写此方法用于提交修改，resign view的first responder状态，或执行其他相关操作。例如，使用此方法还原状态栏的方向和位置
+
