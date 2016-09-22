@@ -220,4 +220,24 @@ VC是否指定其present的VC的transition style。
 `func disablesAutomaticKeyboardDismissal() -> Bool`  
 当前的input view是否会在changing control时自动dismiss。  
 true：不会dismiss。false：可能被dismiss。  
-重写子类的此方法用于允许或禁止当前的input view在从一个需要input view的control切换到到一个不需要input view的control时是否会dismiss。在通常情况下，当用户点击了一个需要input view的control时，系统会自动显示input view。点击一个不需要input view的control会导致input view被dismiss，但不是一定会发生。
+重写子类的此方法用于允许或禁止当前的input view在从一个需要input view的control切换到到一个不需要input view的control时是否会dismiss。在通常情况下，当用户点击了一个需要input view的control时，系统会自动显示input view。点击一个不需要input view的control会导致input view被dismiss，但不是一定会发生。重写此方法允许或禁止那些特殊情况dismiss input view。  
+默认实现中，当VC的`modalPresentationStyle`属性为`.formSheet`时，返回true。其他返回false。因此，系统通常不允许键盘在modal form状态dismiss。  
+
+### Supporting Custom Transitions and Presentations
+`weak var transitioningDelegate: UIViewControllerTransitioningDelegate?`  
+提供过渡动画，交互controller，自定义呈现controller对象的delegate对象。  
+当VC的`modalPresentationStyle`属性为`.custom`时，UIKit会使用此属性中的对象提供VC的过渡和呈现。transition delegate必须实现`UIViewControllerTransitioningDelegate`协议。
+
+`func transitionCoordinator() -> UIViewControllerTransitionCoordinator?`  
+返回活动的过渡协调者对象。  
+当存在进行中的presentation或dismissal时，此方法返回与此transition关联的transition coordinator。如果没有关联当前VC的执行中的transition，UIKit会向VC的祖先查找coordinator对象。使用此对象创建额外的动画并将其与过渡动画同步。  
+Container VC可以重写此方法但大多数情况下都不需要。如果重写了此方法，首先要调用super检查是否有一个合适的coordinator可返回。
+
+`func targetViewControllerForAction(_ action: Selector, sender sender: AnyObject?) -> UIViewController?`  
+返回响应action的VC。  
+此方法返回重写了`action`参数对应方法的VC。如果当前VC没有重写该方法，UIKit会沿着view hierachy寻找第一个重写该方法的VC。如果没有VC能够处理action，返回nil。  
+VC通过其`canPerformAction:withSender:`确定其能否响应某个action。
+
+`var presentationController: UIPresentationController? { get }`  
+管理当前VC的最近的presentation controller。  
+如果VC或其某个祖先
