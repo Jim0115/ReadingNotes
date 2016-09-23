@@ -260,5 +260,18 @@ VC通过其`canPerformAction:withSender:`确定其能否响应某个action。
 `func viewWillDisappear(_ animated: Bool)`  
 提醒VC，其view将要从一个view hierarchy中被移除。  
 此方法在view被移除前被调用，同时也在动画被配置前。  
-子类可以重写此方法用于提交修改，resign view的first responder状态，或执行其他相关操作。例如，使用此方法还原状态栏的方向和位置
+子类可以重写此方法用于提交修改，resign view的first responder状态，或执行其他相关操作。例如，使用此方法还原在`viewWillAppear:`方法中状态栏的方向和位置做的更改。  
+如果重写此方法，必须在实现中某部分调用super。
 
+`func viewDidDisappear(_ animated: Bool)`  
+提醒VC，其view已经从一个view hierarchy中被移除。  
+重写此方法，执行额外的与view的dismiss或hiding相关的任务。如果重写此方法，必须在实现中某部分调用super。
+
+### Configuring the View’s Layout Behavior
+`func viewWillLayoutSubviews()`  
+提醒VC其view将要布局view的subviews。  
+当一个view的bounds变化时，view会调整其subviews的位置。VC可以重写此方法，在view布局其subview前执行操作。此方法默认实现为空。
+
+`func viewDidLayoutSubviews()`  
+提醒VC其view已经布局view的subviews。  
+当一个view的bounds变化时，view会调整其subviews的位置，之后系统会调用此方法。然而，
