@@ -274,4 +274,8 @@ VC通过其`canPerformAction:withSender:`确定其能否响应某个action。
 
 `func viewDidLayoutSubviews()`  
 提醒VC其view已经布局view的subviews。  
-当一个view的bounds变化时，view会调整其subviews的位置，之后系统会调用此方法。然而，
+当一个view的bounds变化时，view会调整其subviews的位置，之后系统会调用此方法。然而，此方法被调用并不代表view的subviews的独立布局被修改。每个subview负责调整其自身的布局。  
+默认实现为空。
+
+`func updateViewConstraints()`  
+当VC的view需要更新其约束时，此方法被调用。
