@@ -278,4 +278,13 @@ VC通过其`canPerformAction:withSender:`确定其能否响应某个action。
 默认实现为空。
 
 `func updateViewConstraints()`  
-当VC的view需要更新其约束时，此方法被调用。
+当VC的view需要更新其约束时，此方法被调用。  
+重写此方法用于优化约束的变化。  
+**在变化发生后立即更新约束总是非常清晰和方便。例如，如果想要响应按钮的点击改变约束，直接在按钮的action方法中改变约束即可。**  
+**重写此方法的情况只有两种：在对应位置改变约束太慢，view产生了大量的冗余约束。**  
+在view上调用`setNeedUpdateConstraints`方法安排改变约束。系统会在布局发生时调用此方法的自定义实现。  
+此方法的实现必须尽可能高效。不要禁用所有约束，之后重新启用需要的约束。相反，app必须有某种追踪约束的方法，在每次update pass中使约束生效。只有变化的对象需要变化。在每次update pass中，必须确保有当前状态的合适约束。  
+不要在此方法实现中调用`setNeedUpdateConstraints`。  
+在实现的最后必须调用super。  
+
+`var bottomLayoutGuide: UILayoutSupport { get }`  
