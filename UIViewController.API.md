@@ -288,3 +288,5 @@ VC通过其`canPerformAction:withSender:`确定其能否响应某个action。
 在实现的最后必须调用super。  
 
 `var bottomLayoutGuide: UILayoutSupport { get }`  
+代表屏幕内容的垂直方向底端，用于建立约束。  
+此属性在VC在屏幕最前端时才生效。表示垂直方向最底端，不包括tabbar和toolbar。此方法实现了`UILayoutSupport`协议，可以将其用作`NSLayoutConstraint`对象的某个item。  
