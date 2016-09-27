@@ -290,3 +290,16 @@ VC通过其`canPerformAction:withSender:`确定其能否响应某个action。
 `var bottomLayoutGuide: UILayoutSupport { get }`  
 代表屏幕内容的垂直方向底端，用于建立约束。  
 此属性在VC在屏幕最前端时才生效。表示垂直方向最底端，不包括tabbar和toolbar。此方法实现了`UILayoutSupport`协议，可以将其用作`NSLayoutConstraint`对象的某个item。  
+此属性的值，尤其是，`length`属性的值会在请求时返回。此值被VC或其containerVC（navigation、tab）约束，规则如下：
+
+* 不在container中的VC约束此值用于表示可见的tabbar或toolbar的顶端。或者表示VC的view的底端。
+* 包含在containerVC中的VC不设置此值。相反，containerVC约束此值表示可见的tabbar或toolbar的顶端。或者表示VC的view的底端。
+
+如果一个containerVC的toolbar或tabbar是可见不透明的,container会将最前的VC的view布局为底端与bar的顶端相邻。这种情况下，此属性的值为0。  
+在`viewDidLayoutSubviews`方法的自定义实现中查询此属性。  
+当使用SB布局时，此对象在IB outline view中作为VC对象的child可用。使用IB添加一个bottom layout guide提供对iOS 6的向后兼容性。  
+
+`var topLayoutGuide: UILayoutSupport { get }`  
+代表屏幕内容的垂直方向顶端，用于建立约束。
+
+`var edgesForExtendedLayout: UIRectEdge`  
