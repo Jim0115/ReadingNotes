@@ -312,3 +312,22 @@ VC通过其`canPerformAction:withSender:`确定其能否响应某个action。
 `var automaticallyAdjustsScrollViewInsets: Bool`  
 VC是否应该自动调整其scrollview的inset。  
 默认值为true，允许VC根据被状态栏、导航栏、工具栏和tab栏占用的空间调整期scrollview的inset。将此属性设置为false时可以手动调整inset，适用于有多个scrollview的情况。
+
+### Testing for Specific Kinds of View Transitions
+`func isMovingFromParentViewController() -> Bool`  
+VC是否在被从parent移除的过程中。  
+true表示VC因为从containerVC中被移除，正在消失。  
+此方法只有在`viewWillDisappear:`和`viewDidDisappear:`调用此方法才可能返回true。  
+
+`func isMovingToParentViewController() -> Bool`  
+与上一方法完全相反。
+
+`func isBeingDismissed() -> Bool`  
+VC是否处于被其某个祖先dismiss的过程中。  
+true表示VC在之前被present，正处于被dismiss的过程中。  
+此方法只有在`viewWillDisappear:`和`viewDidDisappear:`调用此方法才可能返回true。  
+
+`func isBeingPresented() -> Bool`  
+与上一方法完全相反。
+
+### Configuring the View Rotation Settings
