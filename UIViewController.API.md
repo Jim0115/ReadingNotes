@@ -303,3 +303,12 @@ VC通过其`canPerformAction:withSender:`确定其能否响应某个action。
 代表屏幕内容的垂直方向顶端，用于建立约束。
 
 `var edgesForExtendedLayout: UIRectEdge`  
+用于布局的拓展边界。  
+此属性仅当VC被嵌在一个例如`UINavigationController`的container中时提供。window的rootVC不响应此属性。默认值为`.All`。  
+
+`var extendedLayoutIncludesOpaqueBars: Bool`  
+是否包括不透明bar的拓展布局。默认为false。
+
+`var automaticallyAdjustsScrollViewInsets: Bool`  
+VC是否应该自动调整其scrollview的inset。  
+默认值为true，允许VC根据被状态栏、导航栏、工具栏和tab栏占用的空间调整期scrollview的inset。将此属性设置为false时可以手动调整inset，适用于有多个scrollview的情况。
