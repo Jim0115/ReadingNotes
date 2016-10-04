@@ -331,3 +331,21 @@ true表示VC在之前被present，正处于被dismiss的过程中。
 与上一方法完全相反。
 
 ### Configuring the View Rotation Settings
+`func shouldAutorotate() -> Bool`  
+VC的content是否应该自动旋转。  
+默认返回true。iOS 5之前会默认返回false。  
+
+`func supportedInterfaceOrientations() -> UIInterfaceOrientationMask`  
+VC支持的界面方向。返回值不得为0。  
+
+	struct UIInterfaceOrientationMask : OptionSetType {
+	    init(rawValue rawValue: UInt)
+	    static var Portrait: UIInterfaceOrientationMask { get }
+	    static var LandscapeLeft: UIInterfaceOrientationMask { get }
+	    static var LandscapeRight: UIInterfaceOrientationMask { get }
+	    static var PortraitUpsideDown: UIInterfaceOrientationMask { get }
+	    static var Landscape: UIInterfaceOrientationMask { get }
+	    static var All: UIInterfaceOrientationMask { get }
+	    static var AllButUpsideDown: UIInterfaceOrientationMask { get }
+	}
+当用户改变设备方向时，系统会在rootVC或最上方全屏VC上调用此方法。如果VC支持新的方向，window和VC会被旋转到新的方向。此方法只在VC的`shouldAutorotate`方法返回true时被调用。
