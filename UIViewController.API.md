@@ -348,4 +348,9 @@ VC支持的界面方向。返回值不得为0。
 	    static var All: UIInterfaceOrientationMask { get }
 	    static var AllButUpsideDown: UIInterfaceOrientationMask { get }
 	}
-当用户改变设备方向时，系统会在rootVC或最上方全屏VC上调用此方法。如果VC支持新的方向，window和VC会被旋转到新的方向。此方法只在VC的`shouldAutorotate`方法返回true时被调用。
+当用户改变设备方向时，系统会在rootVC或最上方全屏VC上调用此方法。如果VC支持新的方向，window和VC会被旋转到新的方向。此方法只在VC的`shouldAutorotate`方法返回true时被调用。  
+重写此方法报告VC支持的所有方向。iPad的默认值为`.All`而iPhone的默认值为`.AllButUpsideDown`。  
+系统会将App支持的方向与VC支持的方向求交，确定旋转的方向。  
+
+`func preferredInterfaceOrientationForPresentation() -> UIInterfaceOrientation`  
+返回present此VC时使用的界面方向。  
