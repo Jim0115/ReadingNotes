@@ -354,3 +354,35 @@ VC支持的界面方向。返回值不得为0。
 
 `func preferredInterfaceOrientationForPresentation() -> UIInterfaceOrientation`  
 返回present此VC时使用的界面方向。  
+系统会在全屏present VC时调用此方法。当VC支持两个以上的方向，其中一个在内容显示上最佳，重写此方法返回该方向。  
+如果VC实现了此方法，VC的view会在对应方向上展示（之后可被旋转到其他支持的方向）。如果没有实现此方向，系统会使用当前状态栏方向进行present。  
+
+`class func attemptRotationToDeviceOrientation()`  
+尝试旋转所有window到设备所在的方向。  
+有些VC可能需要使用app特定的条件确定支持的方向。如果是这样，当支持的方向改变时，App应该立即调用此方法。系统会尝试将VC旋转到当前方向。  
+
+### Adapting to Environment Changes
+`func collapseSecondaryViewController(_ secondaryViewController: UIViewController, forSplitViewController splitViewController: UISplitViewController)`  
+当一个splitVC过渡到一个compact-width size class时被调用。  
+如果没有重写`splitViewController:collapseSecondaryViewController:ontoPrimaryViewController:`方法，默认的行为是显示splitVC的primaryVC。  
+
+`func separateSecondaryViewControllerForSplitViewController(_ splitViewController: UISplitViewController) -> UIViewController?`  
+当一个splitVC过渡到regular-width size class时被调用。  
+如果没有重写`splitViewController:separateSecondaryViewControllerFromPrimaryViewController:`方法，默认返回前一个secondaryVC。  
+
+### Managing Child View Controllers in a Custom Container
+`var childViewControllers: [UIViewController] { get }`  
+当前VC的child VC数组。  
+此属性不包括任何presentedVC。此属性智能呗自定义containerVC读取。  
+
+`func addChildViewController(_ childController: UIViewController)`  
+将一个VC作为当前VC的child添加。  
+此方法在currentVC和参数`childController`之间建立一个parent-child关系。这种关系在将childVC的view嵌入currentVC的内容中时是必要的。如果参数`childController`已经是其他containerVC的child，在其被添加前会先被移除。  
+此方法只能被自定义containerVC调用。如果重写此方法，必须在实现中调用super。  
+
+`func removeFromParentViewController()`  
+将VC从其parent中移除。  
+此方法只能被自定义containerVC调用。如果重写此方法，必须在实现中调用super。
+
+`func transitionFromViewController(_ fromViewController: UIViewController, toViewController toViewController: UIViewController, duration duration: NSTimeInterval, options options: UIViewAnimationOptions, animations animations: (() -> Void)?, completion completion: ((Bool) -> Void)?)`  
+在VC的两个childVC之间过渡。  
