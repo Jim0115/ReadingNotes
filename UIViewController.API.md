@@ -386,3 +386,29 @@ VC支持的界面方向。返回值不得为0。
 
 `func transitionFromViewController(_ fromViewController: UIViewController, toViewController toViewController: UIViewController, duration duration: NSTimeInterval, options options: UIViewAnimationOptions, animations animations: (() -> Void)?, completion completion: ((Bool) -> Void)?)`  
 在VC的两个childVC之间过渡。  
+此方法将secondVC的view添加到view hierarchy中，之后执行`animation`block中的动画。在动画结束时，将firstVC的view从view hierarchy中移除。  
+此方法只能被自定义containerVC调用。如果重写此方法，必须在实现中调用super。 
+
+`func shouldAutomaticallyForwardAppearanceMethods() -> Bool`  
+appearance methods是否转发给childVC。  
+默认实现返回true。实现了containment逻辑的`UIViewController`的子类可能重写此方法用于控制方法的转发。如果此方法返回false，当child的view将要出现或消失时，必须负责通知child。通过调用child的`beginAppearanceTransition:animated:`和`endAppearanceTransition`方法。  
+
+`func beginAppearanceTransition(_ isAppearing: Bool, animated animated: Bool)`  
+告诉child controller其显示将要改变。  
+
+- `isAppearing`：true表示childVC的view将要被添加到view hierarchy中，false表示将要被移除
+- `animated`：动画
+
+如果实现了一个自定义container controller，使用此方法告诉child其view将要出现或消失。不要直接在此方法中调用`viewWillAppear:`, `viewWillDisappear:`, `viewDidAppear:`或`viewDidDisappear:`。  
+
+`func endAppearanceTransition()`  
+如果实现了一个自定义container controller，使用此方法告诉child，view过渡已经完成。  
+
+`func setOverrideTraitCollection(_ collection: UITraitCollection?, forChildViewController childViewController: UIViewController)`  
+改变特定的childVC的traits。  
+`UITraitCollection`：iOS 8引入的，用于描述设备的环境信息，包括缩放比例，水平/垂直方向上的size class，设备类型，force touch可用性。  
+通常，traits在从parentVC到childVC传递时不会被修改。当实现了自定义的containerVC时，可以使用此方法修改任何包含的childVC的traits以更合适布局。进行此项修改会改变与此child相关的其他VC的行为。也可以使用此方法强制使所有childVC使用同样的traits，忽视其所在的真实traits环境。  
+
+`func overrideTraitCollectionForChildViewController(_ childViewController: UIViewController) -> UITraitCollection?`  
+获得一个childVC的trait collection。  
+使用此方法获得一个childVC的trait collection。 
