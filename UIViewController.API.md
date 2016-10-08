@@ -414,3 +414,9 @@ appearance methods是否转发给childVC。
 使用此方法获得一个childVC的trait collection。之后可以使用上一方法设置childVC的trait collection。  
 
 ### Responding to Containment Events
+`func willMoveToParentViewController(_ parent: UIViewController?)`  
+VC将要被添加到containerVC或从containerVC中移除时被调用。  
+子类可以重写此方法，用于确定其何时被加入到container中。  
+如果实现自定义containerVC，在调用childVC的`removeFromParentViewController`之前必须调用其`willMoveToParentViewController:`方法。  
+当自定义container调用`addChildViewController:`方法时，其会在添加前自动调用childVC的`willMoveToParentViewController:`方法。   
+
