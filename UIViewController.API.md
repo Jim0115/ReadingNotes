@@ -411,4 +411,6 @@ appearance methods是否转发给childVC。
 
 `func overrideTraitCollectionForChildViewController(_ childViewController: UIViewController) -> UITraitCollection?`  
 获得一个childVC的trait collection。  
-使用此方法获得一个childVC的trait collection。 
+使用此方法获得一个childVC的trait collection。之后可以使用上一方法设置childVC的trait collection。  
+
+### Responding to Containment Events
