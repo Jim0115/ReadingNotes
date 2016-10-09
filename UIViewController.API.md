@@ -420,3 +420,15 @@ VC将要被添加到containerVC或从containerVC中移除时被调用。
 如果实现自定义containerVC，在调用childVC的`removeFromParentViewController`之前必须调用其`willMoveToParentViewController:`方法。  
 当自定义container调用`addChildViewController:`方法时，其会在添加前自动调用childVC的`willMoveToParentViewController:`方法。   
 
+`func didMoveToParentViewController(_ parent: UIViewController?)`  
+VC被添加到containerVC或从containerVC中移除之后被调用。  
+如果实现自定义containerVC，必须在过渡动画结束后调用`didMoveToParentViewController:`。如果没有过渡动画，在`addChildViewController:`方法结束后立即调用`didMoveToParentViewController:`。  
+`removeFromParentViewController`会在childVC被移除后自动调用`didMoveToParentViewController:`。  
+
+### Getting Other Related View Controllers
+`var presentingViewController: UIViewController? { get }`  
+present此VC的VC。  
+当使用`presentViewController:animated:completion:`方法modally present一个VC时，被present的VC此属性被设置为present其的VC。如果当前VC未被modally present，但其某个祖先是，则此属性包含present当前VC祖先的VC。如果两种情况都不符合，此属性为nil。  
+
+`var presentedViewController: UIViewController? { get }`  
+被此VC present的VC或VC hierarchy中其某个祖先。  
