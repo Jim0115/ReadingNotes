@@ -432,3 +432,5 @@ present此VC的VC。
 
 `var presentedViewController: UIViewController? { get }`  
 被此VC present的VC或VC hierarchy中其某个祖先。  
+当使用`presentViewController:animated:completion:`方法present一个VC时，调用此方法的VC会设置此属性为被present的VC。如果当前VC没有present另一个VC，则此属性为空。  
+
