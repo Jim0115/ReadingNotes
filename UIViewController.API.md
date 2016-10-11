@@ -434,3 +434,27 @@ present此VC的VC。
 被此VC present的VC或VC hierarchy中其某个祖先。  
 当使用`presentViewController:animated:completion:`方法present一个VC时，调用此方法的VC会设置此属性为被present的VC。如果当前VC没有present另一个VC，则此属性为空。  
 
+`weak var parentViewController: UIViewController? { get }`  
+接收者的parentVC。  
+如果接收者是某个containerVC的childVC，此属性为containerVC。如果接收者没有parent，此属性为nil。  
+在iOS 5之前，如果一个view没有parentVC，同时其被present，则此属性会返回presentingVC。在iOS 5之后，这种情况不会再发生。使用`presentingViewController`访问presentingVC。  
+
+`var navigationController: UINavigationController? { get }`  
+在VC hierarchy中，最近的navigation controller祖先。  
+如果VC或其某个祖先是一个navigation controller的child，此属性返回该navigation controller。如果VC没有被包含在某个navigation controller中，此属性返回nil。  
+
+`var splitViewController: UISplitViewController? { get }`  
+在VC hierarchy中，最近的split controller祖先。  
+如果VC或其某个祖先是一个split controller的child，此属性返回该split controller。如果VC没有被包含在某个split controller中，此属性返回nil。  
+
+`var tabBarController: UITabBarController? { get }`  
+返回VC hierarchy中，最近的tabbar controller祖先。  
+如果VC或其某个祖先是一个tabbar controller的child，此属性返回该tabbar controller。如果VC没有被包含在某个tabbar controller中，此属性返回nil。 
+
+### Handling Memory Warnings
+`func didReceiveMemoryWarning()`  
+当App收到内存警告时，此方法被发送给VC。  
+App不应该直接调用此方法。相反，系统会在可用内存低时调用此方法。  
+可以重写此方法，释放掉被VC占用的额外内存。如果重写此方法，必须调用super。  
+
+### Managing State Restoration
