@@ -458,3 +458,7 @@ App不应该直接调用此方法。相反，系统会在可用内存低时调�
 可以重写此方法，释放掉被VC占用的额外内存。如果重写此方法，必须调用super。  
 
 ### Managing State Restoration
+`var restorationIdentifier: String?`  
+VC是否支持状态恢复的identifier。  
+此属性代表VC和其内容是否应该被保留，同时使用此属性在恢复过程中标记VC。此属性的默认值为nil，表示VC不会被储存。对此属性赋值一个string对象使系统知道VC应该被保存。而且，string的内容标记VC的用途。  
+在随后的启动中，UIKit
