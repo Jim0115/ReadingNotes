@@ -461,4 +461,8 @@ App不应该直接调用此方法。相反，系统会在可用内存低时调�
 `var restorationIdentifier: String?`  
 VC是否支持状态恢复的identifier。  
 此属性代表VC和其内容是否应该被保留，同时使用此属性在恢复过程中标记VC。此属性的默认值为nil，表示VC不会被储存。对此属性赋值一个string对象使系统知道VC应该被保存。而且，string的内容标记VC的用途。  
-在随后的启动中，UIKit
+在随后的启动中，UIKit会要求重新创建上次App运行时的VC。  
+简单的设置此属性并不足以确保VC被保留和恢复。VC的所有parent必须也有restoration identifier。  
+
+`var restorationClass: AnyObject.Type?`  
+
