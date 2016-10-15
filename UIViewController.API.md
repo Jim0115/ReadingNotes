@@ -465,4 +465,10 @@ VC是否支持状态恢复的identifier。
 简单的设置此属性并不足以确保VC被保留和恢复。VC的所有parent必须也有restoration identifier。  
 
 `var restorationClass: AnyObject.Type?`  
+当恢复app状态时负责重写创建VC的类。  
+如果一个VC有关联的restoration class，该类的`viewControllerWithRestorationIdentifierPath:coder:`方法将在恢复时被调用。该方法负责返回指定VC的VC对象。如果没有指定VC的restoration class，状态恢复engine会要求app delegate提供一个VC对象。  
 
+`func encodeRestorableStateWithCoder(_ coder: NSCoder)`  
+为VC编码状态相关的信息。  
+不要直接调用此方法。系统会在状态保留过程中调用此方法，给你的VC或VC子类储存状态相关信息的机会。  
+当确定需要储存的数据时，写入能够恢复到当前状态的最少的数据。写入的信息应该是不能轻易重新创建的，例如用户当前的选择。
