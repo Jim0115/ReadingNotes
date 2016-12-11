@@ -49,4 +49,141 @@ Swift使用了`copy-on-write`技术，确保copy后的值只有在真正被修�
 ## GeneratorType
     class ConstantGenerator: GeneratorType { 
       typealias Element = Int      func next() -> Element? {        return 1      }    }
-实现`GeneratorType`需要两部分。1. 定义`Element`的类型 2. 实现`next()`方法。  
+实现`GeneratorType`需要两部分。1. 定义`Element`的类型 2. 实现`next()`方法。
+
+# Swift 3.0 2016.12.11
+### 集合协议 遍历 Iterator 序列 Sequence 和集合Collection
+#### 遍历 Iterator
+	
+	protocol IteratorProtocol {
+	  associatedtype Element
+	  public mutating func next() -> Self.Element?
+	}
+	
+`associatedtype`指定的关联类型可以通过`typealias`显式指定，也可以通过`next()`函数的返回值确定。  
+Iterator是没有值语义的，即每个Iterator的值只能被循环一遍。  
+
+	class PrefixIterator : IteratorProtocol {
+	  let string: String
+	  var offSet: String.Index
+	  
+	  init(string: String) {
+	    self.string = string
+	    offSet = string.startIndex
+	  }
+	  
+	  func next() -> String? {
+	    guard offSet < string.endIndex else { return nil }
+	    let result = string[string.startIndex...offSet]
+	    offSet = string.index(after: offSet)
+	    return result
+	  }
+	}
+	
+	let pi = PrefixIterator(string: "Hello World!")
+
+	while let prefix = pi.next() {
+	  print(prefix)
+	}
+一个简单的Iterator示例。如果想要再次迭代，就必须生成一个新的Iterator。这就是Iterator是class而非struct的原因。  
+
+#### 序列 Sequence
+`Sequence`是构建在`Iterator`之上的一个协议，需要指定一个特定类型的Iterator，并提供一个方法用于创建一个新的Iterator。  
+
+	protocol Sequence {
+	  associatedtype Iterator : IteratorProtocol
+	  public func makeIterator() -> Self.Iterator
+	}
+
+一个基于`PrefixIterator`的sequence实现。
+
+	struct PrefixSequence : Sequence {
+	  let string: String
+	  func makeIterator() -> PrefixIterator {
+	    return PrefixIterator(string: string)
+	  }
+	}
+对于实现了`Sequence`协议的对象，可以使用for-in循环对其进行遍历。
+
+	for prefix in PrefixSequence(string: "Hello World!") {
+	  print(prefix)
+	}
+	
+而实际上，for-in遍历只是对Iterator的一种简写：
+
+	var generator = PrefixSequence(string: "Hello").generate()
+	while let prefix = generator.next() {
+	  print(prefix)
+	}
+	
+#### 集合 Collection
+集合是基于序列Sequence的更高层级的协议，为序列添加了可重复迭代，通过索引访问元素的能力。  
+
+
+	/// 一个能够将元素入队和出队的类型
+	protocol QueueType {
+	  /// 在 `self` 中所持有的元素的类型
+	  associatedtype Element
+	  /// 将 `newElement` 入队到 `self`
+	  mutating func enqueue(newElement: Element)
+	  /// 从 `self` 出队一个元素
+	  mutating func dequeue() -> Element?
+	}
+	
+实现一个Queue：
+
+	struct Queue<Element> : QueueType {
+	  fileprivate var left = [Element]()
+	  fileprivate var right = [Element]()
+	  
+	  mutating func enqueue(newElement: Element) {
+	    right.append(newElement)
+	  }
+	  
+	  mutating func dequeue() -> Element? {
+	    if left.isEmpty && right.isEmpty { return nil }
+	    if left.isEmpty {
+	      left = right.reversed()
+	      right.removeAll()
+	    }
+	    return left.removeLast()
+	  }
+	}
+	
+让自定义的队列类`Queue`实现集合Collection协议。实际上，Collection协议是对Sequence和Indexable协议的一个组合。Collection协议中很多方法都有其默认实现，因此，实现一个Collection只需要实现其startIndex和endIndex，通过下标获取对应位置元素，以及对指定的Index找到其下一个Index。  
+
+	extension Queue : Collection {
+	  var startIndex: Int { return 0 }
+	  var endIndex: Int { return left.count + right.count }
+	  
+	  subscript(idx: Int) -> Element {
+	    if idx < left.endIndex {
+	      return left[left.count - idx + 1]
+	    } else {
+	      return right[idx - left.count]
+	    }
+	  }
+	  
+	  func formIndex(after i: inout Int) {
+	    i += 1
+	  }
+	  func index(after i: Int) -> Int {
+	    return i + 1
+	  }
+	}  
+
+### 遵守 ExpressibleByArrayLiteral 协议
+	extension Queue : ExpressibleByArrayLiteral {
+	  init(arrayLiteral elements: Element...) {
+	    // self.left = elements.reversed()
+	    // self.right = [] 使用时会出现段错误 11，应调用init方法
+	    self.init(left: elements.reversed(), right: [])
+	  }
+	}
+
+通过实现此协议，可以直接使用一个数组常量来构建一个Queue。  
+	
+	let q: Queue = [1, 2, 3]
+	// 这里q的类型为Queue<Int>
+	
+遵守
