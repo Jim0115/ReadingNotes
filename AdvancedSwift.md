@@ -172,7 +172,7 @@ Iterator是没有值语义的，即每个Iterator的值只能被循环一遍。
 	  }
 	}  
 
-### 遵守 ExpressibleByArrayLiteral 协议
+#### 遵守 ExpressibleByArrayLiteral 协议
 	extension Queue : ExpressibleByArrayLiteral {
 	  init(arrayLiteral elements: Element...) {
 	    // self.left = elements.reversed()
@@ -186,4 +186,34 @@ Iterator是没有值语义的，即每个Iterator的值只能被循环一遍。
 	let q: Queue = [1, 2, 3]
 	// 这里q的类型为Queue<Int>
 	
-遵守
+#### 遵守 RangeReplaceableCollection 协议
+遵守此协议表示可以使用一个新的集合替换当前集合的某个部分（Range）。通过实现此协议，可以得到许多有用的方法比如：`append`, `appendContentsOf`, `removeAtIndex`, `removeRange`, `insertAtIndex`, `removeAll`等方法。  
+
+	extension Queue : RangeReplaceableCollection {
+	  mutating func reserveCapacity(_ n: Int) {
+	    // 避免在申请内存时不必要的元素复制
+	    return
+	  }
+	  
+	  mutating func replaceSubrange<C>(_ subrange: Range<Int>, with newElements: C) where C : Collection, C.Iterator.Element == Element {
+	    right = left.reversed() + right
+	    left.removeAll(keepingCapacity: true)
+	    right.replaceSubrange(subrange, with: newElements)
+	  }
+	}
+	
+### 索引
+通过enum实现一个单项链表
+
+	enum List<Element> {
+	  case End
+	  indirect case Node(value: Element, next: List<Element>)
+	}
+	
+	
+	extension List {
+	  func cons(x: Element) -> List {
+	    // 用于向当前链表前添加节点，即创建一个节点并在其后链接已有链表
+	    return .Node(value: x, next: self)
+	  }
+	}
