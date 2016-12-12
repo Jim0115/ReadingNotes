@@ -217,3 +217,56 @@ Iterator是没有值语义的，即每个Iterator的值只能被循环一遍。
 	    return .Node(value: x, next: self)
 	  }
 	}
+	
+一个栈的协议：
+
+	/// 一个进栈和出栈都是常数时间操作的后进先出 (LIFO) 栈
+	protocol StackType {
+	  associatedtype Element
+	  /// 将 `x` 入栈到 `self` 作为栈顶元素
+	  ///
+	  /// - 复杂度：O(1).
+	  mutating func push(x: Element)
+	  /// 从 `self` 移除栈顶元素，并返回它
+	  /// 如果 `self` 是空，返回 `nil`
+	  ///
+	  /// - 复杂度：O(1)
+	  mutating func pop() -> Element?
+	}
+	
+对List实现StackType协议：
+
+	extension List : StackType {
+	  mutating func pop() -> Element? {
+	    switch self {
+	    case .End:
+	      return nil
+	    case .Node(let value, let next):
+	      self = next
+	      return value
+	    }
+	  }
+	  
+	  mutating func push(x: Element) {
+	    self = self.cons(x: x)
+	  }
+	}
+	
+#### 让 List 遵守 Sequence
+	extension List : Sequence {
+	  func makeIterator() -> AnyIterator<Element> {
+	    var current = self
+	    return AnyIterator {
+	      // 下一个出栈的元素 若当前为.End 返回nil
+	      current.pop()
+	    }
+	  }
+	}
+
+遵守 ExpressibleByArrayLiteral
+
+	extension List : ExpressibleByArrayLiteral {
+	  init(arrayLiteral elements: Element...) {
+	    self = elements.reversed().reduce(.End) { $0.cons(x: $1) }
+	  }
+	}
