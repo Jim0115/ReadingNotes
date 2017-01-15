@@ -71,3 +71,106 @@ RxSwift是Reactive的Swift实现。
 	// 🐹
 	
 `subscribe(onNext:)`方法会忽略error和completed。对应的还有`subscribe(onError:)`和`subscribe(onCompleted:)`，分别针对error和completed进行处理。
+
+#### from
+从一个`Sequence`，例如`Array`, `Dictionary`或`Set`创建`Observable`对象。
+
+    let disposeBag = DisposeBag()
+    
+    Observable.from(["🐶", "🐱", "🐭", "🐹"])
+        .subscribe(onNext: { print($0) })
+        .addDisposableTo(disposeBag)
+        
+#### create
+创建一个自定义`Observable`对象。  
+
+	let disposeBag = DisposeBag()
+    
+    let myJust = { (element: String) -> Observable<String> in
+        return Observable.create { observer in
+            observer.on(.next(element))
+            observer.on(.completed)
+            return Disposables.create()
+        }
+    }
+        
+    myJust("🔴")
+        .subscribe { print($0) }
+        .addDisposableTo(disposeBag)
+        
+#### range
+对range中元素按照数字顺序发出事件。
+
+    let disposeBag = DisposeBag()
+    
+    Observable.range(start: 1, count: 10)
+        .subscribe { print($0) }
+        .addDisposableTo(disposeBag)
+        
+#### repeatElement
+创建一个无限重复给定元素的`Observable`序列。
+
+    let disposeBag = DisposeBag()
+
+    Observable.repeatElement("🔴")
+        .take(3) // 取Observabke的前n个元素
+        .subscribe(onNext: { print($0) })
+        .addDisposableTo(disposeBag)
+        
+#### generate
+condition为true时，继续执行iterate。
+
+    let disposeBag = DisposeBag()
+    
+    Observable.generate(
+            initialState: 0,
+            condition: { $0 < 3 },
+            iterate: { $0 + 1 }
+        )
+        .subscribe(onNext: { print($0) })
+        .addDisposableTo(disposeBag)
+
+#### deferred
+对每个subscriber都创建一个新的`Observable`对象。
+
+var count = 1
+    
+    let deferredSequence = Observable<String>.deferred {
+        print("Creating \(count)")
+        count += 1
+        
+        return Observable.create { observer in
+            print("Emitting...")
+            observer.onNext("🐶")
+            observer.onNext("🐱")
+            observer.onNext("🐵")
+            return Disposables.create()
+        }
+    }
+    
+    deferredSequence
+        .subscribe(onNext: { print($0) })
+        .addDisposableTo(disposeBag)
+    
+    deferredSequence
+        .subscribe(onNext: { print($0) })
+        .addDisposableTo(disposeBag)
+        
+#### error
+创建一个只包含一个error元素的`Observable`。
+
+    let disposeBag = DisposeBag()
+        
+    Observable<Int>.error(TestError.test)
+        .subscribe { print($0) }
+        .addDisposableTo(disposeBag)
+
+#### doOn
+对指定的事件的发生定义一些副作用。
+
+    let disposeBag = DisposeBag()
+    
+    Observable.of("🍎", "🍐", "🍊", "🍋")
+        .do(onNext: { print("Intercepted:", $0) }, onError: { print("Intercepted error:", $0) }, onCompleted: { print("Completed")  })
+        .subscribe(onNext: { print($0) })
+        .addDisposableTo(disposeBag)
