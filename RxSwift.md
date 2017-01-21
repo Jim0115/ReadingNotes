@@ -174,3 +174,112 @@ var count = 1
         .do(onNext: { print("Intercepted:", $0) }, onError: { print("Intercepted error:", $0) }, onCompleted: { print("Completed")  })
         .subscribe(onNext: { print($0) })
         .addDisposableTo(disposeBag)
+        
+### Working with Subjects
+Subject既可以是Observer也可以是Observable。所以，Subject可以订阅一个或多个Observable，也可以转发其所订阅的Observable的item，同时也可以发送新的item。
+
+#### PublishSubject
+在observer订阅时广播所有新的event。
+
+    let disposeBag = DisposeBag()
+    let subject = PublishSubject<String>()
+    
+    subject.addObserver("1").addDisposableTo(disposeBag)
+    subject.onNext("🐶")
+    subject.onNext("🐱")
+    
+    subject.addObserver("2").addDisposableTo(disposeBag)
+    subject.onNext("🅰️")
+    subject.onNext("🅱️")
+
+Subscription: 1 Event: next(🐶)  
+Subscription: 1 Event: next(🐱)   
+Subscription: 1 Event: next(🅰️)  
+Subscription: 2 Event: next(🅰️)   
+Subscription: 1 Event: next(🅱️)   
+Subscription: 2 Event: next(🅱️)  
+不会发送订阅前的信号。
+
+#### ReplaySubject
+对所有subscriber广播新事件，同时使用`bufferSize`属性指定对新subscriber发送之前消息的数量。
+
+    let disposeBag = DisposeBag()
+    let subject = ReplaySubject<String>.create(bufferSize: 1)
+    
+    subject.addObserver("1").addDisposableTo(disposeBag)
+    subject.onNext("🐶")
+    subject.onNext("🐱")
+    
+    subject.addObserver("2").addDisposableTo(disposeBag)
+    subject.onNext("🅰️")
+    subject.onNext("🅱️")
+    
+Subscription: 1 Event: next(🐶)  
+Subscription: 1 Event: next(🐱)  
+Subscription: 2 Event: next(🐱)   
+Subscription: 1 Event: next(🅰️)  
+Subscription: 2 Event: next(🅰️)  
+Subscription: 1 Event: next(🅱️)  
+Subscription: 2 Event: next(🅱️)  
+由于`bufferSize`为1，所以observer2会收到event🐱。
+
+#### BehaviorSubject
+对所有subscriber广播新事件，同时会有一个初始事件。如果在订阅时没有已发送的事件，会发送初始事件，否则发送上一条事件。
+
+    let disposeBag = DisposeBag()
+    let subject = BehaviorSubject(value: "🔴")
+  
+    subject.addObserver("1").addDisposableTo(disposeBag)
+    subject.onNext("🐶")
+    subject.onNext("🐱")
+    
+    subject.addObserver("2").addDisposableTo(disposeBag)
+    subject.onNext("🅰️")
+    subject.onNext("🅱️")
+    
+    subject.addObserver("3").addDisposableTo(disposeBag)
+    subject.onNext("🍐")
+    subject.onNext("🍊")
+    
+Subscription: 1 Event: next(🔴)  
+Subscription: 1 Event: next(🐶)  
+Subscription: 1 Event: next(🐱)   
+Subscription: 2 Event: next(🐱)   
+Subscription: 1 Event: next(🅰️)   
+Subscription: 2 Event: next(🅰️)   
+Subscription: 1 Event: next(🅱️)   
+Subscription: 2 Event: next(🅱️)  
+Subscription: 3 Event: next(🅱️)   
+Subscription: 1 Event: next(🍐)   
+Subscription: 3 Event: next(🍐)  
+Subscription: 2 Event: next(🍐)   
+Subscription: 1 Event: next(🍊)  
+Subscription: 3 Event: next(🍊)  
+Subscription: 2 Event: next(🍊)    
+这里subscriber1收到了初始事件，而subscriber2和3收到了订阅前的上一事件。
+
+### Variable
+`Variable`封装了一个`BehaviorSubject`，所以其也会发送初始事件或最近的事件。同时`Variable`也维护当前值的状态。`Variable`不会发送错误事件，但会在deinit时自动发送完成事件。
+
+    let variable = Variable("🔴")
+    
+    variable.asObservable().addObserver("1").addDisposableTo(disposeBag)
+    variable.value = "🐶"
+    variable.value = "🐱"
+    
+    variable.asObservable().addObserver("2").addDisposableTo(disposeBag)
+    variable.value = "🅰️"
+    variable.value = "🅱️"
+    
+Subscription: 1 Event: next(🔴)  
+Subscription: 1 Event: next(🐶)  
+Subscription: 1 Event: next(🐱)  
+Subscription: 2 Event: next(🐱)  
+Subscription: 1 Event: next(🅰️)  
+Subscription: 2 Event: next(🅰️)  
+Subscription: 1 Event: next(🅱️)  
+Subscription: 2 Event: next(🅱️)  
+Subscription: 1 Event: completed  
+Subscription: 2 Event: completed    
+
+在一个`Variable`实例上调用`asObserver`方法获取其封装的`BehaviorSubject`序列
